@@ -1,7 +1,7 @@
 #pragma once
 
 // 获取数组中最小元素的下标
-template<typename T, unsigned N>
+template<typename T, int N>
 inline int GetMinElemIndex(T (&arr)[N])
 {
 	int index = 0;
@@ -18,7 +18,7 @@ inline int GetMinElemIndex(T (&arr)[N])
 }
 
 // 获取数组中最大元素的下标
-template<typename T, unsigned N>
+template<typename T, int N>
 inline int GetMaxElemIndex(T(&arr)[N])
 {
 	int index = 0;
