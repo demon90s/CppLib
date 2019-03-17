@@ -7,8 +7,9 @@ class BoringWriter
 {
 public:
     BoringWriter();
-
-    void Join() { m_thread.Join(); }
+    ~BoringWriter() {
+        m_thread.Join();
+    }
 
 private:
     static void* WriteThread(void*);
