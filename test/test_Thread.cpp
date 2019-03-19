@@ -28,6 +28,4 @@ void BoringWriter::DoWrite()
 void test_Thread()
 {
     BoringWriter bw;
-
-    bw.Join();
 }
