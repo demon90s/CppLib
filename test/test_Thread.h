@@ -7,14 +7,13 @@ class BoringWriter
 {
 public:
     BoringWriter();
-    ~BoringWriter() {
-        m_thread.Join();
-    }
+    ~BoringWriter();
 
 private:
     static void* WriteThread(void*);
     void DoWrite();
     Thread m_thread;
+    bool m_is_exit;
 };
 
 //------------------------------------------------

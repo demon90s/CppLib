@@ -5,9 +5,9 @@
 
 int main(int argc, char *argv[])
 {
-    //test_Thread();
+    test_Thread();
     //test_ObjectArray();
-    test_OptHandler(argc, argv);
+    //test_OptHandler(argc, argv);
 
     return 0;
 }

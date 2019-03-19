@@ -2,9 +2,16 @@
 #include "common/Sleep.h"
 #include <stdio.h>
 
-BoringWriter::BoringWriter()
+BoringWriter::BoringWriter() : m_is_exit(false)
 {
+    m_is_exit = false;
     m_thread.Run(WriteThread, this);
+}
+
+BoringWriter::~BoringWriter()
+{
+    m_is_exit = true;
+    m_thread.Join();
 }
 
 void* BoringWriter::WriteThread(void* p)
@@ -17,7 +24,8 @@ void* BoringWriter::WriteThread(void* p)
 
 void BoringWriter::DoWrite()
 {
-    for (int i = 0; i < 5; i++) {
+    while (!m_is_exit)
+    {
         printf("[%ld] Haha I am so boring\n", time(NULL));
         Sleep(1000);
     }
@@ -28,4 +36,6 @@ void BoringWriter::DoWrite()
 void test_Thread()
 {
     BoringWriter bw;
+
+    Sleep(5000);
 }
