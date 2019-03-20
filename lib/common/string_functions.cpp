@@ -40,9 +40,9 @@ std::string StringFormat(const char* fmt, ...)
 		if (str_len >= buffer_len) {
 			str_len = -1;
 
-			buffer_len *= 2;
-			char *tmp_buffer = new char[buffer_len]{};
+			char *tmp_buffer = new char[buffer_len * 2]{};
 			delete[] buffer;
+			buffer_len *= 2;
 			buffer = tmp_buffer;
 		}
 		va_end(ap);
