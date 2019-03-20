@@ -1,0 +1,11 @@
+<config>
+	<test>
+		<data>qqqq</data>
+		<bbbb>bbbbbbbb</bbbb>
+		<far>42</far>
+	</test>
+	<math>
+		<pi>3.14</pi>
+	</math>
+</config>
+

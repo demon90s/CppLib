@@ -1,9 +1,10 @@
 #include "test_ObjectArray.h"
 #include "common/ObjectArray.h"
+#include "common/other_macros.h"
 #include <iostream>
 #include <algorithm>
 
-void test1()
+static void test1()
 {
     ObjectArray<int> oa;
 
@@ -55,7 +56,7 @@ struct Foo {
     ~Foo() { std::cout << "~Foo()\n"; }
     Foo(const Foo&) { std::cout << "Foo(const Foo&)\n"; }
 };
-void test2()
+static void test2()
 {
     Foo foo_tmp;
     ObjectArray<Foo> oa;
@@ -73,7 +74,7 @@ void test2()
     std::cout << "test end  --------------------------------------------\n";
 }
 
-void test3()
+static void test3()
 {
     ObjectArray<Foo*> oa;
 
@@ -89,6 +90,9 @@ void test3()
 void test_ObjectArray()
 {
     //test1();
+    IGNORE_NOUSED_WARNING(test1);
     //test2();
+    IGNORE_NOUSED_WARNING(test2);
+    
     test3();
 }

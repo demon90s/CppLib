@@ -1,5 +1,6 @@
 #include "string_functions.h"
 #include <cstring>
+#include <cstdarg>
 
 std::vector<std::string> SplitString(const std::string &str, const char *delim)
 {
@@ -22,4 +23,33 @@ std::vector<std::string> SplitString(const std::string &str, const char *delim)
 	}
 
 	return result;
+}
+
+std::string StringFormat(const char* fmt, ...)
+{
+	int buffer_len = 1024;
+	char *buffer = new char[buffer_len]{};
+	int str_len = -1;
+
+	do
+	{
+		va_list ap;
+		va_start(ap, fmt);
+		str_len = vsnprintf(buffer, buffer_len, fmt, ap);
+
+		if (str_len >= buffer_len) {
+			str_len = -1;
+
+			buffer_len *= 2;
+			char *tmp_buffer = new char[buffer_len]{};
+			delete[] buffer;
+			buffer = tmp_buffer;
+		}
+		va_end(ap);
+	} while (str_len == -1);
+
+	std::string str = buffer;
+	delete[] buffer;
+
+	return str;
 }
