@@ -1,5 +1,8 @@
 #pragma once
 
+// 获取数组元素的数量
+#define ELEM_NUM(arr) (static_cast<int>(sizeof(arr) / sizeof(*arr)))
+
 // 获取数组中最小元素的下标
 template<typename T, int N>
 inline int GetMinElemIndex(T (&arr)[N])

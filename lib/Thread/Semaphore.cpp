@@ -1,9 +1,9 @@
 #include "Semaphore.h"
 #include <time.h>
 
-Semaphore::Semaphore()
+Semaphore::Semaphore(int init_count)
 {
-    sem_init(&sem_, 0, 0);
+    sem_init(&sem_, 0, init_count);
 }
 
 Semaphore::~Semaphore()

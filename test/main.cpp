@@ -4,6 +4,7 @@
 #include "test_OptHandler.h"
 #include "test_XmlHandler.h"
 #include "test_string_functions.h"
+#include "test_ThreadQueue.h"
 
 int main(int argc, char *argv[])
 {
@@ -11,7 +12,8 @@ int main(int argc, char *argv[])
     //test_ObjectArray();
     //test_OptHandler(argc, argv);
     //test_XmlHandler();
-    test_string_functions();
+    //test_string_functions();
+    test_ThreadQueue();
 
     return 0;
 }

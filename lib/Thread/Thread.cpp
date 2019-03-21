@@ -27,6 +27,9 @@ Thread::~Thread()
 
 bool Thread::Run(ThreadFunc f, void *param)
 {
+    if (thread_ != 0)
+        return false;
+
     ThreadParam *p = new ThreadParam();     // 由 DoThreadFunc 释放
     p->f = f;
     p->param = param;

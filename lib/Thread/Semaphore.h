@@ -7,7 +7,7 @@
 
 class Semaphore {
 public:
-    Semaphore();
+    Semaphore(int init_count);
     ~Semaphore();
     void Wait();
     bool TimeWait(unsigned long ms);
