@@ -8,12 +8,9 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 
-Epoll::Epoll(int listen_socketfd, int epoll_size) : listen_socketfd_(listen_socketfd), ep_sz_(epoll_size), callback_(nullptr)
+Epoll::Epoll() : listen_socketfd_(-1), epfd_(-1), ep_sz_(0), callback_(nullptr)
 {
-    epevt_ = new epoll_event[ep_sz_];
-    epfd_ = epoll_create(ep_sz_);
 
-    this->AddEvent(listen_socketfd_, EPOLLIN);
 }
 
 Epoll::~Epoll()
@@ -23,12 +20,28 @@ Epoll::~Epoll()
         delete handler;
     }
 
-    delete[] epevt_;
-    Socket::Close(epfd_);
+    if (epevt_)
+        delete[] epevt_;
 
     if (callback_)
         delete callback_;
+
+    Socket::Close(listen_socketfd_);
+    Socket::Close(epfd_);
 }
+
+bool Epoll::Init(int listen_socketfd, int epoll_size)
+{
+    if (epfd_ != -1)
+        return false;
+
+    ep_sz_ = epoll_size;
+    epevt_ = new epoll_event[ep_sz_];
+    epfd_ = epoll_create(ep_sz_);
+    listen_socketfd_ = listen_socketfd;
+
+    return this->AddEvent(listen_socketfd_, EPOLLIN);
+}  
 
 void Epoll::EpollWait(unsigned long timeout_ms)
 {
@@ -47,7 +60,7 @@ bool Epoll::Send(NetID netid, const char *data, int len)
     return handler->OnSend(data, len);
 }
 
-NetID Epoll::AddEvent(int socketfd, int evt)
+bool Epoll::AddEvent(int socketfd, int evt)
 {
     EpollEventHandler *handler = new EpollEventHandler(this, socketfd);
 
@@ -56,12 +69,13 @@ NetID Epoll::AddEvent(int socketfd, int evt)
     ev.data.ptr = handler;
     if (epoll_ctl(epfd_, EPOLL_CTL_ADD, socketfd, &ev) != 0) {
         delete handler;
+        return false;
     }
 
     NetID netid = handlers_.Add(handler);
     handler->SetNetID(netid);
 
-    return netid;
+    return true;
 }
 
 void Epoll::DelEvent(NetID netid, int evt)
@@ -109,7 +123,7 @@ void Epoll::HandleEvents(int evt_num)
                     
                     handler->OnAccept(ip, port);
 
-                    callback_->OnAccept(ip, port);
+                    callback_->OnAccept(ip, port); 
                 }
             }
         }

@@ -6,6 +6,7 @@
 #include "test_string_functions.h"
 #include "test_ThreadQueue.h"
 #include "test_Epoll.h"
+#include "test_ModuleManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +16,8 @@ int main(int argc, char *argv[])
     //test_XmlHandler();
     //test_string_functions();
     //test_ThreadQueue();
-    test_Epoll(argc, argv);
+    //test_Epoll(argc, argv);
+    test_ModuleManager();
 
     return 0;
 }

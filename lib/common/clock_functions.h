@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unistd.h>
+#include <sys/time.h>
 #include <time.h>
 
 // 挂起执行线程若干毫秒
@@ -24,4 +25,13 @@ inline struct timespec GetTimeSpec(unsigned long offset_ms = 0)
         ts.tv_nsec %= BILLION;
     }
     return ts;
+}
+
+// 获取毫秒级别时间
+inline unsigned long GetTimeMs()
+{
+    struct timezone tz = { 0, 0 };
+	timeval time;
+	gettimeofday(&time, &tz);
+	return (time.tv_sec * 1000 + time.tv_usec / 1000);
 }

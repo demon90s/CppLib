@@ -78,6 +78,11 @@ static void test3()
 {
     ObjectArray<Foo*> oa;
 
+    // test empty array, OK~
+    for (auto foo : oa) {
+        delete foo;
+    }
+
     for (int i = 0; i < 5; i++) {
         oa.Add(new Foo);
     }
@@ -89,10 +94,12 @@ static void test3()
 
 void test_ObjectArray()
 {
-    //test1();
+    test1();
     IGNORE_NOUSED_WARNING(test1);
+    
     //test2();
     IGNORE_NOUSED_WARNING(test2);
     
-    test3();
+    //test3();
+    IGNORE_NOUSED_WARNING(test3);
 }

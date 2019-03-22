@@ -67,7 +67,6 @@ public:
             arr_[i].constructed = false;
             reuse_index_list_.push_back(i);
         }
-        end_.index_ = reserve_;
     }
     ~ObjectArray() {
         if (arr_) {
@@ -116,6 +115,9 @@ public:
         new (&arr_[index].v)T(v);
 		arr_[index].constructed = true;
         reuse_index_list_.pop_front();
+
+        if (index >= end_.index_)
+            end_.index_ = index + 1;
         
         return index;
     }

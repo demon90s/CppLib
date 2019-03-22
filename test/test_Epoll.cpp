@@ -36,8 +36,14 @@ static void server()
 
     printf("[DEBUG] listen succ\n");
 
-    Epoll ep(listen_socketfd);
+    Epoll ep;
+    if (!ep.Init(listen_socketfd)) {
+        perror("Epoll Init failed");
+        Socket::Close(listen_socketfd);
+        return;
+    }
     ep.SetCallback(new NetEchoCallback(&ep));
+
     while (!exist) {
         ep.EpollWait(1);
     }
