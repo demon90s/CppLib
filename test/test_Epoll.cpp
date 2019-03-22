@@ -75,7 +75,12 @@ static void client()
 
         int nread = Socket::Recv(socketfd, buffer, sizeof(buffer));
         if (nread != static_cast<int>(strlen(buffer) + 1)) {
-            perror("Socket::Recv");
+            if (nread == 0) {
+                printf("server disconnect\n");
+            }
+            else
+                perror("Socket::Recv");
+                
             break;
         }
 

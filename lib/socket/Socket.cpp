@@ -95,3 +95,13 @@ bool Socket::SetNonBlock(int socketfd)
 	int enable = 1;
 	return ioctl(socketfd, FIONBIO, &enable) == 0;
 }
+
+int Socket::GetSockOpt(int socketfd, int level, int optname, char *optval, int *optlen)
+{
+	socklen_t len = optlen ? *optlen : 0;
+	int ret = getsockopt(socketfd, level, optname, optval, &len);
+	if (optlen)
+		*optlen = len;
+
+	return ret;
+}

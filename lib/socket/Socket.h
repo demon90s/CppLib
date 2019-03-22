@@ -31,4 +31,7 @@ public:
 
 	// 设置非阻塞IO
 	static bool SetNonBlock(int socketfd);
+
+	// 读取套接字参数
+	static int GetSockOpt(int socketfd, int level, int optname, char *optval, int *optlen);
 };

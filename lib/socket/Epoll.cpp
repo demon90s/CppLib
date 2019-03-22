@@ -1,6 +1,7 @@
 #include "Epoll.h"
 #include "Socket.h"
 
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -8,13 +9,30 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 
-Epoll::Epoll() : listen_socketfd_(-1), epfd_(-1), ep_sz_(0), callback_(nullptr)
+Epoll::Epoll() : listen_socketfd_(-1), epfd_(-1), ep_sz_(0), 
+    send_data_queue_(256), connect_queue_(256),
+    callback_(nullptr)
 {
 
 }
 
 Epoll::~Epoll()
 {
+    {
+        DataStruct ds;
+        while (send_data_queue_.TryPop(&ds)) {
+            if (handlers_.Exist(ds.netid)) {
+                delete []ds.data;
+            }
+        }
+    }
+
+    {
+        ConnectStruct cs;
+        while (connect_queue_.TryPop(&cs)) {
+        }
+    }
+
     for (auto handler : handlers_) {
         Socket::Close(handler->GetSocket());
         delete handler;
@@ -40,12 +58,35 @@ bool Epoll::Init(int listen_socketfd, int epoll_size)
     epfd_ = epoll_create(ep_sz_);
     listen_socketfd_ = listen_socketfd;
 
-    return this->AddEvent(listen_socketfd_, EPOLLIN);
+    return this->AddEvent(listen_socketfd_, EPOLLIN) != -1;
 }  
 
 void Epoll::EpollWait(unsigned long timeout_ms)
 {
+    // 处理 send queue
+    {
+        DataStruct ds;
+        while (send_data_queue_.TryPop(&ds)) {
+            if (handlers_.Exist(ds.netid)) {
+                EpollEventHandler *handler = handlers_[ds.netid];
+                handler->OnSend(ds.data, ds.len);
+            }
+        }
+    }
+
+    // 处理 connection
+    {
+        ConnectStruct cs;
+        while (connect_queue_.TryPop(&cs)) {
+            NetID netid = this->AddEvent(cs.socketfd, EPOLLIN);
+            if (netid != -1) {
+                callback_->OnConnect(netid, cs.handle);
+            }
+        }
+    }
+
     int evt_num = epoll_wait(epfd_, epevt_, ep_sz_, timeout_ms);
+
     if (evt_num > 0) {
         this->HandleEvents(evt_num);
     }
@@ -53,14 +94,30 @@ void Epoll::EpollWait(unsigned long timeout_ms)
 
 bool Epoll::Send(NetID netid, const char *data, int len)
 {
-    if (!handlers_.Exist(netid))
-        return false;
-    EpollEventHandler *handler = handlers_[netid];
+    DataStruct ds;
+    ds.data = new char[len];    // 由 EpollEventHandler 释放
+    ds.len = len;
+    ds.netid = netid;
+    memcpy(ds.data, data, len);
 
-    return handler->OnSend(data, len);
+    return send_data_queue_.TryPush(ds);
 }
 
-bool Epoll::AddEvent(int socketfd, int evt)
+NetID Epoll::OnConnect(int socketfd)
+{
+    return this->AddEvent(socketfd, EPOLLIN);
+}
+
+bool Epoll::ConnectAsny(int socketfd)
+{
+    ConnectStruct cs;
+    cs.socketfd = socketfd;
+    cs.handle = connnect_handle_generator.Gen();
+
+    return connect_queue_.TryPush(cs);
+}
+
+NetID Epoll::AddEvent(int socketfd, int evt)
 {
     EpollEventHandler *handler = new EpollEventHandler(this, socketfd);
 
@@ -69,13 +126,16 @@ bool Epoll::AddEvent(int socketfd, int evt)
     ev.data.ptr = handler;
     if (epoll_ctl(epfd_, EPOLL_CTL_ADD, socketfd, &ev) != 0) {
         delete handler;
-        return false;
+        return -1;
     }
 
+    handlers_mutex_.Lock();
     NetID netid = handlers_.Add(handler);
+    handlers_mutex_.UnLock();
+
     handler->SetNetID(netid);
 
-    return true;
+    return netid;
 }
 
 void Epoll::DelEvent(NetID netid, int evt)
@@ -90,19 +150,22 @@ void Epoll::DelEvent(NetID netid, int evt)
     epoll_ctl(epfd_, EPOLL_CTL_DEL, handler->GetSocket(), &ev);
 
     delete handler;
+
+    handlers_mutex_.Lock();
     handlers_.Remove(netid);
+    handlers_mutex_.UnLock();
 }
 
-void Epoll::ModEvent(NetID netid, int evt)
+bool Epoll::ModEvent(NetID netid, int evt)
 {
     if (!handlers_.Exist(netid))
-        return;
+        return false;
     EpollEventHandler *handler = handlers_[netid];
 
     struct epoll_event ev;
     ev.events = evt;
     ev.data.ptr = handler;
-    epoll_ctl(epfd_, EPOLL_CTL_MOD, handler->GetSocket(), &ev);
+    return epoll_ctl(epfd_, EPOLL_CTL_MOD, handler->GetSocket(), &ev) == 0;
 }
 
 void Epoll::HandleEvents(int evt_num)

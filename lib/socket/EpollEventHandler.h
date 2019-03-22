@@ -13,7 +13,7 @@ public:
     void OnAccept(const std::string &ip, unsigned short port);
     void OnCanRead();
     void OnCanWrite();
-    bool OnSend(const char *data, int len);
+    void OnSend(const char *data, int len);
 
     void SetNetID(NetID netid) { netid_ = netid; }
 
@@ -27,7 +27,7 @@ private:
     NetID netid_;
 
     struct DataStruct {
-        char *data;
+        const char *data;
         int len;
     };
     ThreadQueue<DataStruct> send_data_queue_;

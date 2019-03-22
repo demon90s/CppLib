@@ -1,6 +1,7 @@
 #include "EpollEventHandler.h"
 #include "Epoll.h"
 #include "Socket.h"
+
 #include <cstring>
 
 EpollEventHandler::EpollEventHandler(Epoll *ep, int socketfd) : ep_(ep), socketfd_(socketfd), netid_(-1),
@@ -23,24 +24,17 @@ void EpollEventHandler::OnAccept(const std::string &ip, unsigned short port)
 
 void EpollEventHandler::OnCanRead()
 {
-    char buffer[1];
+    char buffer[1024];
     int len = 0;
     char *data;
 
     while (true) {
         int nread = Socket::Recv(socketfd_, buffer, sizeof(buffer));
         if (nread <= 0) {
-            if (len > 0)
-                break;
-            
-            ep_->GetCallback()->OnDisconnect(netid_);
-
-            Socket::Close(socketfd_);
-            ep_->DelEvent(netid_, EPOLLIN);
-
-            if (len > 0) {
-                delete []data;
-                len = 0;
+            if (len <= 0) {
+                ep_->GetCallback()->OnDisconnect(netid_);
+                Socket::Close(socketfd_);
+                ep_->DelEvent(netid_, EPOLLIN);
             }
             break;
         }
@@ -83,14 +77,12 @@ void EpollEventHandler::OnCanWrite()
     ep_->ModEvent(netid_, EPOLLIN);
 }
 
-bool EpollEventHandler::OnSend(const char *data, int len)
+void EpollEventHandler::OnSend(const char *data, int len)
 {
     DataStruct ds;
-    ds.data = new char[len];
+    ds.data = data;
     ds.len = len;
-    memcpy(ds.data, data, len);
 
-    ep_->ModEvent(netid_, EPOLLIN | EPOLLOUT);
-    
-    return send_data_queue_.TryPush(ds);
+    if (ep_->ModEvent(netid_, EPOLLIN | EPOLLOUT))
+        send_data_queue_.TryPush(ds);
 }

@@ -12,6 +12,8 @@ public:
         printf("OnAccept, ip: %s, port: %d\n", ip, port);
     }
 
+    void OnConnect(NetID netid, ConnectHandle handle) override {}
+
     void OnRecv(NetID netid, const char *data, int len) override;
 
     void OnDisconnect(NetID netid) override
