@@ -1,4 +1,5 @@
 #include "Semaphore.h"
+#include "common/clock_functions.h"
 #include <time.h>
 
 Semaphore::Semaphore(int init_count)
@@ -18,17 +19,7 @@ void Semaphore::Wait()
 
 bool Semaphore::TimeWait(unsigned long ms)
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += ms / 1000;
-    ts.tv_nsec += (ms % 1000) * 1000 * 1000; // 1 毫秒 = 1,000,000纳秒
-
-    const long BILLION = 1000000000;
-    if (ts.tv_nsec >= BILLION)
-    {
-        ++ts.tv_sec;
-        ts.tv_nsec %= BILLION;
-    }
+    struct timespec ts = GetTimeSpec(ms);
 
     if (sem_timedwait(&sem_, &ts) == 0) {
         return true;

@@ -1,5 +1,5 @@
 #include "test_Thread.h"
-#include "common/Sleep.h"
+#include "common/clock_functions.h"
 #include <stdio.h>
 
 BoringWriter::BoringWriter() : m_is_exit(false)

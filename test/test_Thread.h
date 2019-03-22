@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Thread/Thread.h"
+#include "thread/Thread.h"
 
 // 无聊滴输出一些字符
 class BoringWriter

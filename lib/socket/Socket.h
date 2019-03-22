@@ -28,4 +28,7 @@ public:
 
 	// 接收消息，返回接收的字节数，如果是0，代表断开连接，返回-1代表出错
 	static int Recv(int socketfd, void *buf, int size);
+
+	// 设置非阻塞IO
+	static bool SetNonBlock(int socketfd);
 };

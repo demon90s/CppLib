@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Thread/ThreadQueue.h"
-#include "Thread/Thread.h"
+#include "thread/ThreadQueue.h"
+#include "thread/Thread.h"
 
 // 无聊滴输出一些字符
 class BoringWriter2

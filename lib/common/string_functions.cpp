@@ -53,3 +53,17 @@ std::string StringFormat(const char* fmt, ...)
 
 	return str;
 }
+
+bool StringFormat2(char str[], int len, const char* fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	int str_len = vsnprintf(str, len, fmt, ap);
+	va_end(ap);
+
+	if (str_len > 0 && str_len < len) { // trunck, 认为是失败
+		return true;
+	}
+
+	return false;
+}

@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/ioctl.h>
 
 int Socket::CreateSocket()
 {
@@ -49,7 +50,7 @@ bool Socket::Listen(int socketfd, int backlog)
 int Socket::Accept(int socketfd, char* ip_out, unsigned short *port_out)
 {
 	struct sockaddr_in address;
-	socklen_t address_len;
+	socklen_t address_len = sizeof(address);
 	int new_socketfd = accept(socketfd, (struct sockaddr*)&address, &address_len);
 
 	if (new_socketfd != -1)
@@ -87,4 +88,10 @@ int Socket::Send(int socketfd, const void* buf, int size)
 int Socket::Recv(int socketfd, void *buf, int size)
 {
 	return read(socketfd, buf, size);
+}
+
+bool Socket::SetNonBlock(int socketfd)
+{
+	int enable = 1;
+	return ioctl(socketfd, FIONBIO, &enable) == 0;
 }

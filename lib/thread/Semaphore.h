@@ -9,6 +9,7 @@ class Semaphore {
 public:
     Semaphore(int init_count);
     ~Semaphore();
+    
     void Wait();
     bool TimeWait(unsigned long ms);
     void Post();

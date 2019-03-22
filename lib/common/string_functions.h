@@ -12,6 +12,7 @@ std::vector<std::string> SplitString(const std::string &str, const char* delim);
 
 // 格式化字符串
 std::string StringFormat(const char* fmt, ...);
+bool StringFormat2(char str[], int len, const char* fmt, ...);
 
 // string转换成基础类型，返回是否转换成功
 template<typename T>

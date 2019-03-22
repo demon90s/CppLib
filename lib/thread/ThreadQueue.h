@@ -24,7 +24,7 @@ public:
         read_sem_.Post();
     }
 
-    bool TryPush(const T &v, unsigned long timeout) {
+    bool TryPush(const T &v, unsigned long timeout = 0) {
         if (!write_sem_.TimeWait(timeout))
             return false; // 超时则失败
         this->DoPush(v);
@@ -38,7 +38,7 @@ public:
         write_sem_.Post();
     }
 
-    bool TryPop(T *v, unsigned long timeout) {
+    bool TryPop(T *v, unsigned long timeout = 0) {
         if (!read_sem_.TimeWait(timeout))
             return false; // 超时则失败
         this->DoPop(v);
