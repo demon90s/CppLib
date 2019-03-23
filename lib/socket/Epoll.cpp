@@ -163,7 +163,7 @@ void Epoll::DoEpollWait()
 
         int evt_num = epoll_wait(epfd_, epevt, ep_sz_, 1);
         if (evt_num > 0) {
-            event_mutex_.Lock();  // handle event 时候, 不可以分配 netid
+            event_mutex_.Lock();
             this->HandleEvents(epevt, evt_num);
             event_mutex_.UnLock();
         }

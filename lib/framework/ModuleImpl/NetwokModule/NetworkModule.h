@@ -27,14 +27,27 @@ public:
     bool Send(NetID netid, const char *data, int len);
 
     bool Connect(const char *ip, unsigned short port, unsigned long timeout_ms, NetID *netid_out);
-    // TODO
-    bool ConnectAsyn(const char *ip, unsigned short port);
+    ConnectHandle ConnectAsyn(const char *ip, unsigned short port, unsigned long timeout_ms);
 
 private:
+    static void* ConnectAsynWork(void *param);
+    void DoConnectAsynWork();
+
     unsigned short listen_port_;
     bool is_exist_;
     Epoll ep_;
     INetCallback *callback_;
 
     ThreadQueue<IEpollJob*> job_queue_;
+
+    Thread connect_asyn_thread[4];
+
+    struct ConnectStruct {
+        std::string ip;
+        unsigned short port;
+        ConnectHandle handle;
+        unsigned long timeout_ms; 
+    };
+    ThreadQueue<ConnectStruct> connect_queue_;
+    Mutex connect_mutex_;
 };

@@ -1,10 +1,12 @@
 #include "NetworkModule.h"
 #include "socket/Socket.h"
 #include "common/string_functions.h"
+#include "common/array_functions.h"
 #include "common/clock_functions.h"
 #include "socket/EpollJobAccept.h"
 #include "socket/EpollJobDisconnect.h"
 #include "socket/EpollJobRecv.h"
+#include "socket/EpollJobConnect.h"
 
 #include <iostream>
 #include <cstdio>
@@ -13,12 +15,20 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-NetworkModule::NetworkModule(unsigned short listen_port) : listen_port_(listen_port), is_exist_(false), callback_(nullptr), job_queue_(256)
+NetworkModule::NetworkModule(unsigned short listen_port) : listen_port_(listen_port), is_exist_(false), callback_(nullptr), 
+    job_queue_(256), connect_queue_(4)
 {
 }
 
 NetworkModule::~NetworkModule()
 {
+    for (int i = 0; i < ELEM_NUM(connect_asyn_thread); i++)
+        connect_asyn_thread[i].Join();
+
+    ConnectStruct cs;
+    while (connect_queue_.TryPop(&cs)) {
+    }
+
     IEpollJob *job;
     while (job_queue_.TryPop(&job)) {
         delete job;
@@ -32,8 +42,10 @@ bool NetworkModule::Init()
 {
     std::cout << "NetworkModule::Init" << std::endl;
 
-    std::string error_msg;
+    for (int i = 0; i < ELEM_NUM(connect_asyn_thread); i++)
+        connect_asyn_thread[i].Run(ConnectAsynWork, this);
 
+    std::string error_msg;
     if (!ep_.Init(&job_queue_)) {
         error_msg = StringFormat("Epoll::Init failed: %s", strerror(errno));
         std::cerr << error_msg << std::endl;
@@ -64,19 +76,27 @@ void NetworkModule::Update()
             }
             break;
 
-            case EpollJobType::Disconnect: {
-                EpollJobDisconnect *disconnect_job = (EpollJobDisconnect*)job;
-                
-                if (callback_)
-                    callback_->OnDisconnect(disconnect_job->GetNetID());
-            }
-            break;
-
             case EpollJobType::Recv: {
                 EpollJobRecv *recv_job = (EpollJobRecv*)job;
 
                 if (callback_)
                     callback_->OnRecv(recv_job->GetNetID(), recv_job->GetData(), recv_job->GetLen());
+            }
+            break;
+
+            case EpollJobType::Connect: {
+                EpollJobConnect *connect_job = (EpollJobConnect*)job;
+
+                if (callback_)
+                    callback_->OnConnect(connect_job->GetNetID(), connect_job->GetHandle());
+            }
+            break;
+
+            case EpollJobType::Disconnect: {
+                EpollJobDisconnect *disconnect_job = (EpollJobDisconnect*)job;
+                
+                if (callback_)
+                    callback_->OnDisconnect(disconnect_job->GetNetID());
             }
             break;
         }
@@ -170,7 +190,49 @@ bool NetworkModule::Connect(const char *ip, unsigned short port, unsigned long t
     return false;
 }
 
-bool NetworkModule::ConnectAsyn(const char *ip, unsigned short port)
+ConnectHandle NetworkModule::ConnectAsyn(const char *ip, unsigned short port, unsigned long timeout_ms)
 {
-    return false; // TODO
+    static ConnectHandle handle_gen = 0;
+
+    connect_mutex_.Lock();
+    ++handle_gen;
+
+    ConnectStruct cs;
+    cs.handle = handle_gen;
+    cs.ip = ip;
+    cs.port = port;
+    cs.timeout_ms = timeout_ms;
+    connect_queue_.Push(cs);
+
+    connect_mutex_.UnLock();
+
+    return cs.handle;
+}
+
+void* NetworkModule::ConnectAsynWork(void *param)
+{
+    NetworkModule *pthis = (NetworkModule*)param;
+    pthis->DoConnectAsynWork();
+
+    return 0;
+}
+
+void NetworkModule::DoConnectAsynWork()
+{
+    ConnectStruct cs;
+    NetID netid;
+
+    while (!is_exist_) {
+        while (connect_queue_.TryPop(&cs)) {
+            bool ret = this->Connect(cs.ip.c_str(), cs.port, cs.timeout_ms, &netid);
+
+            if (!ret)
+                netid = -1;
+
+            EpollJobConnect *job = new EpollJobConnect(netid, cs.handle);
+            job_queue_.Push(job);
+        }
+
+        Sleep(1);
+    }
 }

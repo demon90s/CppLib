@@ -3,6 +3,7 @@
 enum class EpollJobType {
     Accept,
     Recv,
+    Connect,
     Disconnect,
 };
 
