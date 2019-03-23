@@ -4,6 +4,7 @@
 #include "framework/ModuleImpl/NetwokModule/NetworkModule.h"
 #include "common/string_functions.h"
 #include "framework/ModuleImpl/NetwokModule/NetCallbackImpl/NetEchoCallback.h"
+#include "framework/ModuleImpl/EchoClientModule.h"
 
 void test_BoringModule()
 {
@@ -18,20 +19,21 @@ void test_NetworkModule()
     const char *module_name = MakeString(NetworkModule);
 
     ModuleManager mm;
-    mm.RegisterModule(module_name, new NetworkModule());
-
+    mm.RegisterModule(module_name, new NetworkModule(6789));
+    
     NetworkModule* module = dynamic_cast<NetworkModule*>(mm.GetModule(module_name));
     if (module) {
         module->SetCallback(new NetEchoCallback(module));
-
-        std::string error_msg;
-        if (!module->StartServer(6789, error_msg)) {
-            std::cout << "StartServer failed: " << error_msg << std::endl;
-        }
-        else {
-            std::cout << "StartServer succ.\n";
-        }
     }
+
+    mm.Run(1);
+}
+
+void test_EchoClientModule()
+{
+    ModuleManager mm;
+    mm.RegisterModule(MakeString(NetworkModule), new NetworkModule());
+    mm.RegisterModule(MakeString(EchoClientModule), new EchoClientModule());
 
     mm.Run(1);
 }
@@ -39,5 +41,6 @@ void test_NetworkModule()
 void test_ModuleManager()
 {
     //test_BoringModule();
-    test_NetworkModule();
+    //test_NetworkModule();
+    test_EchoClientModule();
 }

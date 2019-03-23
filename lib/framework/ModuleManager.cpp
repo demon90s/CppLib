@@ -33,6 +33,8 @@ bool ModuleManager::RegisterModule(const std::string &name, IModule *module)
     module_pool_.emplace(name, module);
     module->SetModuleManager(this);
 
+    module_queue_.push_back(module);
+
     return true;
 }
 
@@ -50,13 +52,24 @@ void ModuleManager::Run(unsigned long update_ms)
     run_ = true;
 
     // Init
-    for (auto it = module_pool_.begin(); it != module_pool_.end(); ) {
-        IModule *module = it->second;
-
+    for (auto it = module_queue_.begin(); it != module_queue_.end();) {
+        IModule *module = *it;
         if (!module->Init()) {
             module->Release();
-            delete module;
-            it = module_pool_.erase(it);
+            it = module_queue_.erase(it);
+        }
+        else {
+            ++it;
+        }
+            
+    }
+
+    // Start
+    for (auto it = module_queue_.begin(); it != module_queue_.end();) {
+        IModule *module = *it;
+        if (!module->Start()) {
+            module->Release();
+            it = module_queue_.erase(it);
         }
         else {
             ++it;
@@ -65,8 +78,8 @@ void ModuleManager::Run(unsigned long update_ms)
 
     // Update
     while (!modulemanager_exist) {
-        for (auto it = module_pool_.begin(); it != module_pool_.end(); ++it) {
-            IModule *module = it->second;
+        for (auto it = module_queue_.begin(); it != module_queue_.end(); ++it) {
+            IModule *module = *it;
             module->Update();
         }
 
@@ -74,8 +87,13 @@ void ModuleManager::Run(unsigned long update_ms)
     }
     
     // Release
-    for (auto it = module_pool_.begin(); it != module_pool_.end(); ++it) {
-        IModule *module = it->second;
+    for (auto it = module_queue_.rbegin(); it != module_queue_.rend(); ++it) {
+        IModule *module = *it;
         module->Release();
     }
+}
+
+void ModuleManager::Stop()
+{
+    modulemanager_exist = true;
 }

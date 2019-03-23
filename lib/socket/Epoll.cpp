@@ -1,5 +1,6 @@
 #include "Epoll.h"
 #include "Socket.h"
+#include "EpollEventHandler.h"
 
 #include <cstring>
 #include <unistd.h>
@@ -37,24 +38,36 @@ Epoll::~Epoll()
     Socket::Close(epfd_);
 }
 
-bool Epoll::Init(int listen_socketfd, ThreadQueue<IEpollJob*> *job_queue)
+bool Epoll::Init(ThreadQueue<IEpollJob*> *job_queue)
 {
     if (epfd_ != -1)
         return false;
 
     epfd_ = epoll_create(ep_sz_);
-    listen_socketfd_ = listen_socketfd;
-    job_queue_ = job_queue;
-
-    if (this->AddEvent(listen_socketfd_, EPOLLIN) == -1) {
+    if (epfd_ == -1)
         return false;
-    }
+
+    job_queue_ = job_queue;
 
     is_exist_ = false;
     epoll_wait_thread_.Run(EpollWait, this);
 
     return true;
-}  
+}
+
+bool Epoll::StartServer(int listen_socketfd)
+{
+    listen_socketfd_ = listen_socketfd;
+
+    event_mutex_.Lock();
+    if (this->AddEvent(listen_socketfd_, EPOLLIN) == -1) {
+        event_mutex_.UnLock();
+        return false;
+    }
+    event_mutex_.UnLock();
+
+    return true;
+}
 
 bool Epoll::Send(NetID netid, const char *data, int len)
 {
@@ -69,15 +82,12 @@ bool Epoll::Send(NetID netid, const char *data, int len)
 
 NetID Epoll::OnConnect(int socketfd)
 {
-    // TODO
-    //return this->AddEvent(socketfd, EPOLLIN);
-    return -1;
-}
+    NetID netid;
+    event_mutex_.Lock();
+    netid = this->AddEvent(socketfd, EPOLLIN);
+    event_mutex_.UnLock();
 
-bool Epoll::ConnectAsny(int socketfd)
-{
-    // TODO
-    return false;
+    return netid;
 }
 
 NetID Epoll::AddEvent(int socketfd, int evt)
@@ -153,7 +163,9 @@ void Epoll::DoEpollWait()
 
         int evt_num = epoll_wait(epfd_, epevt, ep_sz_, 1);
         if (evt_num > 0) {
+            event_mutex_.Lock();  // handle event 时候, 不可以分配 netid
             this->HandleEvents(epevt, evt_num);
+            event_mutex_.UnLock();
         }
     }
 

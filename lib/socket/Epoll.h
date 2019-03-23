@@ -2,15 +2,18 @@
 
 #include <string>
 #include <sys/epoll.h>
+
 #include "common/NoCopy.h"
 #include "common/ObjectArray.h"
 #include "thread/Thread.h"
-#include "EpollEventHandler.h"
+#include "thread/ThreadQueue.h"
+#include "thread/Mutex.h"
 #include "netdef.h"
 
 // 封装 epoll server
 
 class IEpollJob;
+class EpollEventHandler;
 
 class Epoll {
     friend class EpollEventHandler;
@@ -18,13 +21,12 @@ public:
     Epoll(int epoll_size = 20480);
     ~Epoll();
 
-    // 初始化并启动服务线程
-    bool Init(int listen_socketfd, ThreadQueue<IEpollJob*> *job_queue);
+    bool Init(ThreadQueue<IEpollJob*> *job_queue);
+    bool StartServer(int listen_socketfd);
 
     bool Send(NetID netid, const char *data, int len);
 
     NetID OnConnect(int socketfd);
-    bool ConnectAsny(int socketfd);
 
 private:
     NetID AddEvent(int socketfd, int evt);
@@ -55,4 +57,6 @@ private:
         NetID netid;
     };
     ThreadQueue<DataStruct> send_data_queue_;
+
+    Mutex event_mutex_;
 };

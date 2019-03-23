@@ -117,8 +117,8 @@ public:
 		arr_[index].constructed = true;
         reuse_index_list_.pop_front();
 
-        if (index >= end_.index_)
-            end_.index_ = index + 1;
+        if (index == end_.index_)
+            ++end_.index_;
         
         return index;
     }
@@ -130,6 +130,9 @@ public:
                 arr_[index].constructed = false;
 
                 reuse_index_list_.push_back(index);
+
+                if (index == end_.index_ - 1)
+                    --end_.index_;
             }
         }
     }

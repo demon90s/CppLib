@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-NetworkModule::NetworkModule() : is_exist_(false), callback_(nullptr), job_queue_(256)
+NetworkModule::NetworkModule(unsigned short listen_port) : listen_port_(listen_port), is_exist_(false), callback_(nullptr), job_queue_(256)
 {
 }
 
@@ -31,6 +31,21 @@ NetworkModule::~NetworkModule()
 bool NetworkModule::Init()
 {
     std::cout << "NetworkModule::Init" << std::endl;
+
+    std::string error_msg;
+
+    if (!ep_.Init(&job_queue_)) {
+        error_msg = StringFormat("Epoll::Init failed: %s", strerror(errno));
+        std::cerr << error_msg << std::endl;
+        return false;
+    }
+
+    if (listen_port_ > 0) {
+        if (!this->StartServer(listen_port_, error_msg)) {
+            std::cerr << error_msg << std::endl;
+            return false;
+        }
+    }
     
     return true;
 }
@@ -92,8 +107,8 @@ bool NetworkModule::StartServer(unsigned short listen_port, std::string &error_m
         return false;
     }
 
-    if (!ep_.Init(listen_socketfd, &job_queue_)) {
-        error_msg = StringFormat("Epoll::Init failed: %s", strerror(errno));
+    if (!ep_.StartServer(listen_socketfd)) {
+        error_msg = StringFormat("Epoll::StartServer failed: %s", strerror(errno));
         Socket::Close(listen_socketfd);
         return false;
     }
@@ -119,9 +134,7 @@ bool NetworkModule::Connect(const char *ip, unsigned short port, unsigned long t
         return false;
     }
 
-    if (!Socket::Connect(socketfd, ip, port)) {
-        return false;
-    }
+    Socket::Connect(socketfd, ip, port);
 
     // 检测超时
     {
@@ -151,7 +164,6 @@ bool NetworkModule::Connect(const char *ip, unsigned short port, unsigned long t
                 }
             }
         }
-
     }
 
     Socket::Close(socketfd);

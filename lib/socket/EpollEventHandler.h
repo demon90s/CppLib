@@ -17,7 +17,6 @@ public:
 
     void SetNetID(NetID netid) { netid_ = netid; }
 
-    Epoll* GetEpoll() const { return ep_; }
     int GetSocket() const { return socketfd_; }
     NetID GetNetID() const { return netid_; }
 

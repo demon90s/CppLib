@@ -42,11 +42,17 @@ static void server()
     Epoll ep;
     ThreadQueue<IEpollJob*> job_queue(1);
 
-    if (!ep.Init(listen_socketfd, &job_queue)) {
+    if (!ep.Init(&job_queue)) {
         perror("Epoll Init failed");
         Socket::Close(listen_socketfd);
         return;
     }
+    if (!ep.StartServer(listen_socketfd)) {
+        perror("Epoll StartServer failed");
+        Socket::Close(listen_socketfd);
+        return;
+    }
+
     printf("[DEBUG] server start\n");
 
     IEpollJob *job;
