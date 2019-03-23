@@ -1,6 +1,9 @@
 #include "EpollEventHandler.h"
 #include "Epoll.h"
 #include "Socket.h"
+#include "EpollJobAccept.h"
+#include "EpollJobDisconnect.h"
+#include "EpollJobRecv.h"
 
 #include <cstring>
 
@@ -17,9 +20,12 @@ EpollEventHandler::~EpollEventHandler()
     }
 }
 
-void EpollEventHandler::OnAccept(const std::string &ip, unsigned short port)
+void EpollEventHandler::OnAccept(int socketfd, const std::string &ip, unsigned short port)
 {
-    
+    NetID netid = ep_->AddEvent(socketfd, EPOLLIN);
+
+    IEpollJob *accept_job = new EpollJobAccept(ip, port, netid);
+    ep_->job_queue_->Push(accept_job);
 }
 
 void EpollEventHandler::OnCanRead()
@@ -32,7 +38,9 @@ void EpollEventHandler::OnCanRead()
         int nread = Socket::Recv(socketfd_, buffer, sizeof(buffer));
         if (nread <= 0) {
             if (len <= 0) {
-                ep_->GetCallback()->OnDisconnect(netid_);
+                IEpollJob *job = new EpollJobDisconnect(netid_);
+                ep_->job_queue_->Push(job);
+
                 Socket::Close(socketfd_);
                 ep_->DelEvent(netid_, EPOLLIN);
             }
@@ -59,8 +67,8 @@ void EpollEventHandler::OnCanRead()
     }
 
     if (len > 0) {
-        ep_->GetCallback()->OnRecv(netid_, data, len);
-        delete []data;
+        IEpollJob *job = new EpollJobRecv(netid_, data, len);
+        ep_->job_queue_->Push(job);
     }
 }
 

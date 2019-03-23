@@ -10,7 +10,7 @@ public:
     ModuleManager* GetModuleManager() const { return module_mgr_; }
 
     virtual bool Init() = 0;
-    virtual bool Update() = 0;
+    virtual void Update() = 0;
     virtual void Release() = 0;
 
 protected:

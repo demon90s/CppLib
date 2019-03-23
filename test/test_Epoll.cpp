@@ -1,11 +1,14 @@
 #include "test_Epoll.h"
 #include "socket/Epoll.h"
 #include "socket/Socket.h"
-#include "socket/NetCallbackImpl/NetEchoCallback.h"
 #include "common/other_macros.h"
 #include "common/OptHandler.h"
 #include "common/clock_functions.h"
 #include "common/string_functions.h"
+#include "thread/ThreadQueue.h"
+#include "socket/EpollJobAccept.h"
+#include "socket/EpollJobDisconnect.h"
+#include "socket/EpollJobRecv.h"
 
 #include <cstring>
 #include <csignal>
@@ -37,18 +40,37 @@ static void server()
     printf("[DEBUG] listen succ\n");
 
     Epoll ep;
-    if (!ep.Init(listen_socketfd)) {
+    ThreadQueue<IEpollJob*> job_queue(1);
+
+    if (!ep.Init(listen_socketfd, &job_queue)) {
         perror("Epoll Init failed");
         Socket::Close(listen_socketfd);
         return;
     }
-    ep.SetCallback(new NetEchoCallback(&ep));
+    printf("[DEBUG] server start\n");
 
+    IEpollJob *job;
     while (!exist) {
-        ep.EpollWait(1);
+        if (job_queue.TryPop(&job)) {
+            if (job->GetType() == EpollJobType::Accept) {
+                EpollJobAccept *accept_job = (EpollJobAccept*)job;
+                printf("a client accept, netid: %d, ip: %s, port: %u\n", accept_job->GetNetID(), accept_job->GetIp().c_str(), accept_job->GetPort());
+            }
+            else if (job->GetType() == EpollJobType::Disconnect) {
+                printf("a client disconnect, netid: %d\n", job->GetNetID());
+            }
+            else if (job->GetType() == EpollJobType::Recv) {
+                EpollJobRecv *recv_job = (EpollJobRecv*)job;
+                printf("Recv msg from netid[%d]: %s\n", recv_job->GetNetID(), recv_job->GetData());
+                ep.Send(recv_job->GetNetID(), recv_job->GetData(), recv_job->GetLen());
+            }
+
+            delete job;
+        }
+        Sleep(1);
     }
 
-    printf("[DEBUG] server done\n");
+    printf("[DEBUG] server stop\n");
 }
 
 static void client()

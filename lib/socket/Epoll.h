@@ -4,39 +4,22 @@
 #include <sys/epoll.h>
 #include "common/NoCopy.h"
 #include "common/ObjectArray.h"
+#include "thread/Thread.h"
 #include "EpollEventHandler.h"
-#include "INetCallback.h"
 #include "netdef.h"
 
 // 封装 epoll server
 
-class EpollConnectHandleGenerater {
-public:
-    ConnectHandle Gen() {
-        ConnectHandle handle_ret;
-        mutex_.Lock();
-        handle_ret = ++handle_;
-        mutex_.UnLock();
-        return handle_ret;
-    }
-
-private:
-    ConnectHandle handle_ = 0;
-    Mutex mutex_;
-};
+class IEpollJob;
 
 class Epoll {
     friend class EpollEventHandler;
 public:
-    Epoll();
+    Epoll(int epoll_size = 20480);
     ~Epoll();
 
-    bool Init(int listen_socketfd, int epoll_size = 20480);
-
-    void SetCallback(INetCallback *callback) { callback_ = callback; }
-    INetCallback* GetCallback() const { return callback_; }
-
-    void EpollWait(unsigned long timeout_ms);
+    // 初始化并启动服务线程
+    bool Init(int listen_socketfd, ThreadQueue<IEpollJob*> *job_queue);
 
     bool Send(NetID netid, const char *data, int len);
 
@@ -48,17 +31,23 @@ private:
     void DelEvent(NetID netid, int evt);
     bool ModEvent(NetID netid, int evt);
 
-    void HandleEvents(int evt_num);
+    static void* EpollWait(void *param);
+    void DoEpollWait();
+    void HandleEvents(epoll_event *epevt, int evt_num);
+
+    bool is_exist_;
+
+    Thread epoll_wait_thread_;
 
     NoCopy nocpy_;
 
     int listen_socketfd_;
     int epfd_;
     int ep_sz_;
-    epoll_event *epevt_;     // 临时的事件列表
 
-    Mutex handlers_mutex_;
-    ObjectArray<EpollEventHandler*> handlers_;       // 事件处理对象列表, 索引是 netid
+    ThreadQueue<IEpollJob*> *job_queue_;        // 生产消费队列
+
+    ObjectArray<EpollEventHandler*> handlers_;  // 事件处理对象列表, 索引是 netid
     
     struct DataStruct {
         char *data;
@@ -66,13 +55,4 @@ private:
         NetID netid;
     };
     ThreadQueue<DataStruct> send_data_queue_;
-
-    struct ConnectStruct {
-        int socketfd;
-        ConnectHandle handle;
-    };
-    ThreadQueue<ConnectStruct> connect_queue_;
-    EpollConnectHandleGenerater connnect_handle_generator;
-
-    INetCallback *callback_;
 };

@@ -29,6 +29,7 @@ class ObjectArray {
     template<typename Value, typename Arr = ObjectArray>
     struct Iterator {
         Iterator(Arr* object_arr) : index_(0), object_arr_(object_arr) {}
+        Iterator(Arr* object_arr, int index) : index_(0), object_arr_(object_arr) {}
 
         bool operator==(const Iterator<Value, Arr>& rhs) {
             return index_ == rhs.index_ && object_arr_ == rhs.object_arr_;
@@ -140,6 +141,13 @@ public:
             }
         }
         return false;
+    }
+
+    Iterator<T> Find(int index) {
+        if (!Exist(index)) {
+            return end_;
+        }
+        return Iterator<T>(this, index);
     }
 
     T& operator[](int index) {

@@ -2,6 +2,10 @@
 #include "socket/Socket.h"
 #include "common/string_functions.h"
 #include "common/clock_functions.h"
+#include "socket/EpollJobAccept.h"
+#include "socket/EpollJobDisconnect.h"
+#include "socket/EpollJobRecv.h"
+
 #include <iostream>
 #include <cstdio>
 #include <cerrno>
@@ -9,15 +13,19 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-NetworkModule::NetworkModule() : is_exist_(false), server_start_(false)
+NetworkModule::NetworkModule() : is_exist_(false), callback_(nullptr), job_queue_(256)
 {
-
 }
 
 NetworkModule::~NetworkModule()
 {
-    if (server_start_)
-        ep_work_thread_.Join();
+    IEpollJob *job;
+    while (job_queue_.TryPop(&job)) {
+        delete job;
+    }
+
+    if (callback_)
+        delete callback_;
 }
 
 bool NetworkModule::Init()
@@ -27,9 +35,39 @@ bool NetworkModule::Init()
     return true;
 }
 
-bool NetworkModule::Update()
+void NetworkModule::Update()
 {
-    return true;
+    IEpollJob *job;
+    while (job_queue_.TryPop(&job)) {
+        switch (job->GetType())
+        {
+            case EpollJobType::Accept: {
+                EpollJobAccept *accept_job = (EpollJobAccept*)job;
+
+                if (callback_)
+                    callback_->OnAccept(accept_job->GetIp().c_str(), accept_job->GetPort());
+            }
+            break;
+
+            case EpollJobType::Disconnect: {
+                EpollJobDisconnect *disconnect_job = (EpollJobDisconnect*)job;
+                
+                if (callback_)
+                    callback_->OnDisconnect(disconnect_job->GetNetID());
+            }
+            break;
+
+            case EpollJobType::Recv: {
+                EpollJobRecv *recv_job = (EpollJobRecv*)job;
+
+                if (callback_)
+                    callback_->OnRecv(recv_job->GetNetID(), recv_job->GetData(), recv_job->GetLen());
+            }
+            break;
+        }
+
+        delete job;
+    }
 }
 
 void NetworkModule::Release()
@@ -42,11 +80,6 @@ void NetworkModule::Release()
 
 bool NetworkModule::StartServer(unsigned short listen_port, std::string &error_msg)
 {
-    if (server_start_) {
-        error_msg = "Server already started";
-        return false;
-    }
-
     int listen_socketfd = Socket::CreateSocket();
     
     if (!Socket::Bind(listen_socketfd, nullptr, listen_port)) {
@@ -59,21 +92,18 @@ bool NetworkModule::StartServer(unsigned short listen_port, std::string &error_m
         return false;
     }
 
-    if (!ep_.Init(listen_socketfd)) {
+    if (!ep_.Init(listen_socketfd, &job_queue_)) {
         error_msg = StringFormat("Epoll::Init failed: %s", strerror(errno));
         Socket::Close(listen_socketfd);
         return false;
     }
-
-    ep_work_thread_.Run(EpWork, this);
-    server_start_ = true;
 
     return true;
 }
 
 void NetworkModule::SetCallback(INetCallback *callback)
 {
-    ep_.SetCallback(callback);
+    callback_ = callback;
 }
 
 bool NetworkModule::Send(NetID netid, const char *data, int len)
@@ -131,20 +161,4 @@ bool NetworkModule::Connect(const char *ip, unsigned short port, unsigned long t
 bool NetworkModule::ConnectAsyn(const char *ip, unsigned short port)
 {
     return false; // TODO
-}
-
-void *NetworkModule::EpWork(void* param)
-{
-    NetworkModule *pthis = (NetworkModule*)param;
-
-    pthis->DoEpWork();
-
-    return 0;
-}
-
-void NetworkModule::DoEpWork()
-{
-    while (!is_exist_) {
-        ep_.EpollWait(1);
-    }
 }

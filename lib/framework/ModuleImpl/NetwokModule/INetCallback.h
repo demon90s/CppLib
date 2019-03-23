@@ -1,12 +1,12 @@
 #pragma once
 
-#include "netdef.h"
+#include "socket/netdef.h"
 
-class Epoll;
+class NetworkModule;
 
 class INetCallback {
 public:
-    INetCallback(Epoll *ep) : ep_(ep) {}
+    INetCallback(NetworkModule *network) : network_(network) {}
     virtual ~INetCallback() {}
     virtual void OnAccept(const char *ip, unsigned short port) {}
     virtual void OnConnect(NetID netid, ConnectHandle handle) {}
@@ -14,5 +14,5 @@ public:
     virtual void OnDisconnect(NetID netid) {}
 
 protected:
-    Epoll *ep_;
+    NetworkModule *network_;
 };

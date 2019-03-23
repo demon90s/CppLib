@@ -13,13 +13,11 @@ public:
         return true;
     }
 
-    bool Update() override {
+    void Update() override {
         if (GetTimeMs() - m_last_update_time > 1000) {
             std::cout << "BoringModule::Update" << std::endl;
             m_last_update_time = GetTimeMs();
         }
-        
-        return true;
     }
 
     void Release() override {

@@ -10,7 +10,7 @@ class EpollEventHandler {
 public:
     EpollEventHandler(Epoll *ep, int socketfd);
     ~EpollEventHandler();
-    void OnAccept(const std::string &ip, unsigned short port);
+    void OnAccept(int socketfd, const std::string &ip, unsigned short port);
     void OnCanRead();
     void OnCanWrite();
     void OnSend(const char *data, int len);

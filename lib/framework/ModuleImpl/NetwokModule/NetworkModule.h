@@ -3,6 +3,9 @@
 #include "framework/IModule.h"
 #include "socket/Epoll.h"
 #include "thread/Thread.h"
+#include "thread/ThreadQueue.h"
+#include "socket/IEpollJob.h"
+#include "INetCallback.h"
 
 class NetworkModule : public IModule {
 public:
@@ -10,7 +13,7 @@ public:
     ~NetworkModule() override;
 
     bool Init() override;
-    bool Update() override;
+    void Update() override;
     void Release() override;
 
     Epoll *GetEpoll() { return &ep_; }
@@ -21,15 +24,14 @@ public:
 
     bool Send(NetID netid, const char *data, int len);
 
+    // TODO
     bool Connect(const char *ip, unsigned short port, unsigned long timeout_ms, NetID *netid_out);
     bool ConnectAsyn(const char *ip, unsigned short port);
 
 private:
-    static void *EpWork(void*);
-    void DoEpWork();
-
     bool is_exist_;
-    bool server_start_;
     Epoll ep_;
-    Thread ep_work_thread_;
+    INetCallback *callback_;
+
+    ThreadQueue<IEpollJob*> job_queue_;
 };

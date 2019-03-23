@@ -65,21 +65,10 @@ void ModuleManager::Run(unsigned long update_ms)
 
     // Update
     while (!modulemanager_exist) {
-        for (auto it = module_pool_.begin(); it != module_pool_.end(); ) {
+        for (auto it = module_pool_.begin(); it != module_pool_.end(); ++it) {
             IModule *module = it->second;
-
-            if (!module->Update()) {
-                module->Release();
-                delete module;
-                it = module_pool_.erase(it);
-            }
-            else {
-                ++it;
-            }
+            module->Update();
         }
-
-        if (module_pool_.empty())
-            break;
 
         Sleep(update_ms);
     }

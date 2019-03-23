@@ -3,7 +3,7 @@
 #include "framework/ModuleImpl/BoringModule.h"
 #include "framework/ModuleImpl/NetwokModule/NetworkModule.h"
 #include "common/string_functions.h"
-#include "socket/NetCallbackImpl/NetEchoCallback.h"
+#include "framework/ModuleImpl/NetwokModule/NetCallbackImpl/NetEchoCallback.h"
 
 void test_BoringModule()
 {
@@ -22,7 +22,7 @@ void test_NetworkModule()
 
     NetworkModule* module = dynamic_cast<NetworkModule*>(mm.GetModule(module_name));
     if (module) {
-        module->SetCallback(new NetEchoCallback(module->GetEpoll()));
+        module->SetCallback(new NetEchoCallback(module));
 
         std::string error_msg;
         if (!module->StartServer(6789, error_msg)) {

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "socket/INetCallback.h"
+#include "framework/ModuleImpl/NetwokModule/INetCallback.h"
 #include <cstdio>
 
 class NetEchoCallback : public INetCallback {
 public:
-    NetEchoCallback(Epoll *ep) : INetCallback(ep) {}
+    NetEchoCallback(NetworkModule *network) : INetCallback(network) {}
     ~NetEchoCallback() override {}
     void OnAccept(const char *ip, unsigned short port) override
     {
