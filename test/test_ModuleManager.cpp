@@ -41,6 +41,6 @@ void test_EchoClientModule()
 void test_ModuleManager()
 {
     //test_BoringModule();
-    //test_NetworkModule();
-    test_EchoClientModule();
+    test_NetworkModule();
+    //test_EchoClientModule();
 }

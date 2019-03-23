@@ -137,7 +137,7 @@ public:
                 if (index == end_.index_ - 1)
                     --end_.index_;
 
-                if (beg_ != end_ && !this->Exist(beg_.index_)) {
+                while (beg_ != end_ && !this->Exist(beg_.index_)) {
                     ++beg_;
                 }
             }

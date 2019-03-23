@@ -15,7 +15,13 @@
 int Socket::CreateSocket()
 {
     signal(SIGPIPE, SIG_IGN);
-	return socket(AF_INET, SOCK_STREAM, 0);
+
+    int socketfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    int enable = 1;
+    setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
+
+    return socketfd;
 }
 
 bool Socket::Bind(int socketfd, const char* ip, unsigned short port)
@@ -38,10 +44,6 @@ bool Socket::Bind(int socketfd, const char* ip, unsigned short port)
 bool Socket::Listen(int socketfd, int backlog)
 {
     int ret = listen(socketfd, backlog);
-    if (ret != 0) return false;
-
-    int enable = 1;
-    ret = setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
     if (ret != 0) return false;
 
     return true;
