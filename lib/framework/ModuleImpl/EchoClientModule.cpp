@@ -50,6 +50,7 @@ bool EchoClientModule::Start()
     std::cout << "EchoClientModule::Start, Connect server succ, netid: " << server_netid_ << std::endl;
     */
 
+    //connect_server_handle_ = network_->ConnectAsyn("118.24.3.169", 6789, 3000);
     connect_server_handle_ = network_->ConnectAsyn("127.0.0.1", 6789, 3000);
 
     return true;
