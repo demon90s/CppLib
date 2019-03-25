@@ -57,6 +57,4 @@ private:
         NetID netid;
     };
     ThreadQueue<DataStruct> send_data_queue_;
-
-    Mutex event_mutex_;
 };

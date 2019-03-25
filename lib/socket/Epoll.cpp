@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 
 Epoll::Epoll(int epoll_size) : is_exist_(true), listen_socketfd_(-1), epfd_(-1), ep_sz_(epoll_size), 
-    send_data_queue_(256)
+    send_data_queue_(epoll_size)
 {
 
 }
@@ -60,12 +60,9 @@ bool Epoll::StartServer(int listen_socketfd)
 {
     listen_socketfd_ = listen_socketfd;
 
-    event_mutex_.Lock();
     if (this->AddEvent(listen_socketfd_, EPOLLIN) == -1) {
-        event_mutex_.UnLock();
         return false;
     }
-    event_mutex_.UnLock();
 
     return true;
 }
@@ -73,20 +70,20 @@ bool Epoll::StartServer(int listen_socketfd)
 bool Epoll::Send(NetID netid, const char *data, int len)
 {
     DataStruct ds;
-    ds.data = new char[len];    // 由 EpollEventHandler 释放
-    ds.len = len;
+    ds.data = new char[sizeof(int) + len];    // 由 EpollEventHandler 释放, 头带长度, 处理黏包
+    ds.len = sizeof(int) + len;
     ds.netid = netid;
-    memcpy(ds.data, data, len);
+    *(int*)ds.data = len;
+    memcpy(ds.data + sizeof(int), data, len);
 
-    return send_data_queue_.TryPush(ds);
+    send_data_queue_.Push(ds);
+    return true;
 }
 
 NetID Epoll::OnConnect(int socketfd)
 {
     NetID netid;
-    event_mutex_.Lock();
     netid = this->AddEvent(socketfd, EPOLLIN);
-    event_mutex_.UnLock();
 
     return netid;
 }
@@ -111,8 +108,9 @@ NetID Epoll::AddEvent(int socketfd, int evt)
 
 void Epoll::DelEvent(NetID netid, int evt)
 {
-    if (!handlers_.Exist(netid))
+    if (!handlers_.Exist(netid)) {
         return;
+    }
     EpollEventHandler *handler = handlers_[netid];
 
     struct epoll_event ev;
@@ -127,14 +125,17 @@ void Epoll::DelEvent(NetID netid, int evt)
 
 bool Epoll::ModEvent(NetID netid, int evt)
 {
-    if (!handlers_.Exist(netid))
+    if (!handlers_.Exist(netid)) {
         return false;
+    }
     EpollEventHandler *handler = handlers_[netid];
 
     struct epoll_event ev;
     ev.events = evt;
     ev.data.ptr = handler;
-    return epoll_ctl(epfd_, EPOLL_CTL_MOD, handler->GetSocket(), &ev) == 0;
+    bool ret = epoll_ctl(epfd_, EPOLL_CTL_MOD, handler->GetSocket(), &ev) == 0;
+
+    return ret;
 }
 
 void* Epoll::EpollWait(void *param)
@@ -151,8 +152,6 @@ void Epoll::DoEpollWait()
     epoll_event *epevt = new epoll_event[ep_sz_];
 
     while (!is_exist_) {
-
-        event_mutex_.Lock();
         // 处理 send queue
         {
             DataStruct ds;
@@ -168,7 +167,6 @@ void Epoll::DoEpollWait()
         if (evt_num > 0) {
             this->HandleEvents(epevt, evt_num);
         }
-        event_mutex_.UnLock();
 
         Sleep(1);
     }

@@ -45,10 +45,10 @@ class ObjectArray {
             return &this->operator*();
         }
         Iterator<Value, Arr>& operator++() {
-			if (index_ < object_arr_->Capacity())
+			if (index_ != object_arr_->end().index_)
 				++index_;
 
-            while (!object_arr_->Exist(index_) && index_ < object_arr_->Capacity()) {
+            while (!object_arr_->Exist(index_) && index_ != object_arr_->end().index_) {
                 ++index_;
             }
             return *this;

@@ -67,7 +67,7 @@ void EchoClientModule::Update()
     }
 
     char buffer[1024];
-    for (int i = 1; i <= 5; i++) {
+    for (int i = 1; i <= 10; i++) {
         StringFormat2(buffer, sizeof(buffer), "hello[%d]", i);
         network_->Send(server_netid_, buffer, strlen(buffer) + 1);
     }

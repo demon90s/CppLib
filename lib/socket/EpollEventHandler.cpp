@@ -32,7 +32,7 @@ void EpollEventHandler::OnCanRead()
 {
     char buffer[1024];
     int len = 0;
-    char *data;
+    char *data = nullptr;
 
     while (true) {
         int nread = Socket::Recv(socketfd_, buffer, sizeof(buffer));
@@ -43,6 +43,7 @@ void EpollEventHandler::OnCanRead()
 
                 Socket::Close(socketfd_);
                 ep_->DelEvent(netid_, EPOLLIN);
+                return;
             }
             break;
         }
@@ -66,10 +67,37 @@ void EpollEventHandler::OnCanRead()
         }
     }
 
-    if (len > 0) {
-        IEpollJob *job = new EpollJobRecv(netid_, data, len);
-        ep_->job_queue_->Push(job);
+    bool invalid_package = false;
+    char *tmp_data = data;
+    if (len > 0 && len <= static_cast<int>(sizeof(int))) {
+        invalid_package = true;
     }
+    else {
+        int package_len = *(int*)(tmp_data);
+        while (len >= package_len) {
+            IEpollJob *job = new EpollJobRecv(netid_, tmp_data + sizeof(int), package_len);
+            ep_->job_queue_->Push(job);
+
+            len = len - sizeof(int) - package_len;
+            tmp_data = tmp_data + sizeof(int) + package_len;
+
+            if (len > static_cast<int>(sizeof(int))) {
+                package_len = *(int*)(tmp_data);
+            }
+        }
+    }
+
+    if (invalid_package) {
+        // 必须头带长度, 处理黏包
+        IEpollJob *job = new EpollJobDisconnect(netid_);
+        ep_->job_queue_->Push(job);
+
+        Socket::Close(socketfd_);
+        ep_->DelEvent(netid_, EPOLLIN);
+    }
+
+    if (data)
+        delete []data;
 }
 
 void EpollEventHandler::OnCanWrite()
@@ -91,6 +119,6 @@ void EpollEventHandler::OnSend(const char *data, int len)
     ds.len = len;
 
     if (ep_->ModEvent(netid_, EPOLLIN | EPOLLOUT)) {
-        send_data_queue_.TryPush(ds);
+        send_data_queue_.Push(ds);
     }
 }
