@@ -11,6 +11,7 @@ void OnSig(int sig) {
 
 ModuleManager::ModuleManager() : run_(false)
 {
+    srand(GetTimeMs());
     signal(SIGINT, OnSig);
 }
 

@@ -99,7 +99,7 @@ void NetworkModule::Release()
 
     is_exist_ = true;
 
-    ep_.StopServer();
+    ep_.Release();
 
     for (int i = 0; i < ELEM_NUM(connect_asyn_thread); i++)
         connect_asyn_thread[i].Join();
@@ -108,7 +108,6 @@ void NetworkModule::Release()
     while (connect_queue_.TryPop(&cs)) {
     }
 
-    // ? Epoll ???, ???? job ? Push ?
     IEpollJob *job;
     while (job_queue_.TryPop(&job)) {
         delete job;

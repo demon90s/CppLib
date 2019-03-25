@@ -20,7 +20,7 @@ Epoll::Epoll(int epoll_size) : is_exist_(true), listen_socketfd_(-1), epfd_(-1),
 Epoll::~Epoll()
 {
     if (!is_exist_)
-        this->StopServer();
+        this->Release();
 }
 
 bool Epoll::Init(ThreadQueue<IEpollJob*> *job_queue)
@@ -40,18 +40,7 @@ bool Epoll::Init(ThreadQueue<IEpollJob*> *job_queue)
     return true;
 }
 
-bool Epoll::StartServer(int listen_socketfd)
-{
-    listen_socketfd_ = listen_socketfd;
-
-    if (this->AddEvent(listen_socketfd_, EPOLLIN) == -1) {
-        return false;
-    }
-
-    return true;
-}
-
-void Epoll::StopServer()
+void Epoll::Release()
 {
     listen_socketfd_ = -1;
 
@@ -73,6 +62,17 @@ void Epoll::StopServer()
     }
 
     Socket::Close(epfd_);
+}
+
+bool Epoll::StartServer(int listen_socketfd)
+{
+    listen_socketfd_ = listen_socketfd;
+
+    if (this->AddEvent(listen_socketfd_, EPOLLIN) == -1) {
+        return false;
+    }
+
+    return true;
 }
 
 bool Epoll::Send(NetID netid, const char *data, int len)

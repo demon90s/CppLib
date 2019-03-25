@@ -72,6 +72,11 @@ void EchoClientModule::Update()
         network_->Send(server_netid_, buffer, strlen(buffer) + 1);
     }
 
+    if (m_send_times != 0 && m_cur_send_times >= m_send_times)
+        this->GetModuleManager()->Stop();
+
+    ++m_cur_send_times;
+
     m_next_echo_time = GetTimeMs();
 }
 
@@ -83,7 +88,8 @@ void EchoClientModule::Release()
 void EchoClientModule::OnConnect(NetID netid, ConnectHandle handle)
 {
     if (netid == -1) {
-        std::cout << "EchoClientModule Connect server aysn failed\n";
+        std::cout << "EchoClientModule Connect server aysn failed, stop\n";
+        module_mgr_->Stop();
         return;
     }
 

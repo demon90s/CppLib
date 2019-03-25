@@ -34,7 +34,7 @@ void test_EchoClientModule()
 {
     ModuleManager mm;
     mm.RegisterModule(MakeString(NetworkModule), new NetworkModule());
-    mm.RegisterModule(MakeString(EchoClientModule), new EchoClientModule());
+    mm.RegisterModule(MakeString(EchoClientModule), new EchoClientModule(rand() % 20 + 1));
 
     mm.Run(1);
 }

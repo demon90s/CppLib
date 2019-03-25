@@ -9,7 +9,9 @@ class NetworkModule;
 
 class EchoClientModule : public IModule {
 public:
-    EchoClientModule() : m_next_echo_time(0), network_(nullptr), server_netid_(-1), connect_server_handle_(-1) {}
+    EchoClientModule(int send_times = 0) : 
+        m_next_echo_time(0), network_(nullptr), server_netid_(-1), connect_server_handle_(-1),
+        m_cur_send_times(0), m_send_times(send_times) {}
 
     bool Init() override;
 
@@ -27,4 +29,7 @@ private:
 
     NetID server_netid_;
     ConnectHandle connect_server_handle_;
+
+    int m_cur_send_times;
+    const int m_send_times;
 };

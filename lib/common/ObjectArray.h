@@ -69,6 +69,7 @@ public:
             arr_[i].constructed = false;
             reuse_index_list_.push_back(i);
         }
+        end_.index_ = reserve_;
     }
     ~ObjectArray() {
         if (arr_) {
@@ -169,7 +170,11 @@ public:
         return arr_[index].v;
     }
 
-    Iterator<T> begin() { return beg_; }
+    Iterator<T> begin() { 
+        if (!this->Exist(beg_.index_))
+            return end();
+        return beg_; 
+    }
     Iterator<T> end() { return end_; }
 
 private:
@@ -197,7 +202,8 @@ ObjectArray<T>::ObjectArray(const ObjectArray& oa): reserve_(oa.reserve_), arr_(
             reuse_index_list_.push_back(i);
         }
     }
-    end_.index_ = reserve_;
+    beg_.index_ = oa.beg_.index_;
+    end_.index_ = oa.end_.index_;
 }
 
 template<typename T>
