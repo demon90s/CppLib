@@ -181,6 +181,10 @@ void Epoll::HandleEvents(epoll_event *epevt, int evt_num)
         int fd = handler->GetSocket();
         int ev = epevt[i].events;
 
+        if (ev & EPOLLOUT) {
+            handler->OnCanWrite();
+        }
+
         if ((fd == listen_socketfd_) && (ev & EPOLLIN)) {
             char ip[128];
             unsigned short port;
@@ -193,10 +197,6 @@ void Epoll::HandleEvents(epoll_event *epevt, int evt_num)
         }
         else if (ev & EPOLLIN) {
             handler->OnCanRead();
-        }
-        
-        if (ev & EPOLLOUT) {
-            handler->OnCanWrite();
         }
     }
 }

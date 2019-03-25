@@ -12,13 +12,15 @@
 
 // 封装 epoll server
 
+#define EPOLL_DEFUALT_SZ 10240
+
 class IEpollJob;
 class EpollEventHandler;
 
 class Epoll {
     friend class EpollEventHandler;
 public:
-    Epoll(int epoll_size = 20480);
+    Epoll(int epoll_size = EPOLL_DEFUALT_SZ);
     ~Epoll();
 
     bool Init(ThreadQueue<IEpollJob*> *job_queue);
@@ -49,7 +51,7 @@ private:
 
     ThreadQueue<IEpollJob*> *job_queue_;        // 生产消费队列
 
-    ObjectArray<EpollEventHandler*> handlers_;  // 事件处理对象列表, 索引是 netid
+    ObjectArray<EpollEventHandler*> handlers_;  // 事件处理对象列表, 索引是 netid TODO 线程不安全
     
     struct DataStruct {
         char *data;

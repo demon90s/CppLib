@@ -24,8 +24,8 @@ void EpollEventHandler::OnAccept(int socketfd, const std::string &ip, unsigned s
 {
     NetID netid = ep_->AddEvent(socketfd, EPOLLIN);
 
-    IEpollJob *accept_job = new EpollJobAccept(ip, port, netid);
-    ep_->job_queue_->Push(accept_job);
+    IEpollJob *job = new EpollJobAccept(ip, port, netid);
+    ep_->job_queue_->Push(job);
 }
 
 void EpollEventHandler::OnCanRead()
