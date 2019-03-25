@@ -19,24 +19,8 @@ Epoll::Epoll(int epoll_size) : is_exist_(true), listen_socketfd_(-1), epfd_(-1),
 
 Epoll::~Epoll()
 {
-    is_exist_ = true;
-    epoll_wait_thread_.Join();
-
-    {
-        DataStruct ds;
-        while (send_data_queue_.TryPop(&ds)) {
-            if (handlers_.Exist(ds.netid)) {
-                delete []ds.data;
-            }
-        }
-    }
-
-    for (auto handler : handlers_) {
-        Socket::Close(handler->GetSocket());
-        delete handler;
-    }
-
-    Socket::Close(epfd_);
+    if (!is_exist_)
+        this->StopServer();
 }
 
 bool Epoll::Init(ThreadQueue<IEpollJob*> *job_queue)
@@ -65,6 +49,30 @@ bool Epoll::StartServer(int listen_socketfd)
     }
 
     return true;
+}
+
+void Epoll::StopServer()
+{
+    listen_socketfd_ = -1;
+
+    is_exist_ = true;
+    epoll_wait_thread_.Join();
+
+    {
+        DataStruct ds;
+        while (send_data_queue_.TryPop(&ds)) {
+            if (handlers_.Exist(ds.netid)) {
+                delete []ds.data;
+            }
+        }
+    }
+
+    for (auto handler : handlers_) {
+        Socket::Close(handler->GetSocket());
+        delete handler;
+    }
+
+    Socket::Close(epfd_);
 }
 
 bool Epoll::Send(NetID netid, const char *data, int len)

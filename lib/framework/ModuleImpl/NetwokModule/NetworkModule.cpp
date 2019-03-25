@@ -22,20 +22,8 @@ NetworkModule::NetworkModule(unsigned short listen_port) : listen_port_(listen_p
 
 NetworkModule::~NetworkModule()
 {
-    for (int i = 0; i < ELEM_NUM(connect_asyn_thread); i++)
-        connect_asyn_thread[i].Join();
-
-    ConnectStruct cs;
-    while (connect_queue_.TryPop(&cs)) {
-    }
-
-    IEpollJob *job;
-    while (job_queue_.TryPop(&job)) {
-        delete job;
-    }
-
-    if (callback_)
-        delete callback_;
+    if (!is_exist_)
+        this->Release();
 }
 
 bool NetworkModule::Init()
@@ -110,6 +98,25 @@ void NetworkModule::Release()
     std::cout << "NetworkModule::Release" << std::endl;
 
     is_exist_ = true;
+
+    ep_.StopServer();
+
+    for (int i = 0; i < ELEM_NUM(connect_asyn_thread); i++)
+        connect_asyn_thread[i].Join();
+
+    ConnectStruct cs;
+    while (connect_queue_.TryPop(&cs)) {
+    }
+
+    // ? Epoll ???, ???? job ? Push ?
+    IEpollJob *job;
+    while (job_queue_.TryPop(&job)) {
+        delete job;
+    }
+
+    if (callback_)
+        delete callback_;
+
     return;
 }
 

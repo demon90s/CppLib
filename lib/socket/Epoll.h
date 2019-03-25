@@ -25,6 +25,7 @@ public:
 
     bool Init(ThreadQueue<IEpollJob*> *job_queue);
     bool StartServer(int listen_socketfd);
+    void StopServer();
 
     bool Send(NetID netid, const char *data, int len);
 
