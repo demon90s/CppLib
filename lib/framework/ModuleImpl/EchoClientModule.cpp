@@ -3,6 +3,7 @@
 #include "framework/ModuleManager.h"
 #include "framework/ModuleImpl/NetwokModule/INetCallback.h"
 #include "common/string_functions.h"
+#include <cstring>
 
 //------------------------------------------
 
@@ -58,13 +59,17 @@ bool EchoClientModule::Start()
 
 void EchoClientModule::Update()
 {
+    if (server_netid_ == -1)
+        return;
+
     if (GetTimeMs() - m_next_echo_time < 1000) {
         return;
     }
 
-    if (server_netid_ != -1) {
-        char buffer[] = "hello";
-        network_->Send(server_netid_, buffer, sizeof(buffer));
+    char buffer[1024];
+    for (int i = 1; i <= 5; i++) {
+        StringFormat2(buffer, sizeof(buffer), "hello[%d]", i);
+        network_->Send(server_netid_, buffer, strlen(buffer) + 1);
     }
 
     m_next_echo_time = GetTimeMs();

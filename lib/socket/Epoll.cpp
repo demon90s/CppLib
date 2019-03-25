@@ -1,6 +1,7 @@
 #include "Epoll.h"
 #include "Socket.h"
 #include "EpollEventHandler.h"
+#include "common/clock_functions.h"
 
 #include <cstring>
 #include <unistd.h>
@@ -150,6 +151,8 @@ void Epoll::DoEpollWait()
     epoll_event *epevt = new epoll_event[ep_sz_];
 
     while (!is_exist_) {
+
+        event_mutex_.Lock();
         // 处理 send queue
         {
             DataStruct ds;
@@ -161,12 +164,13 @@ void Epoll::DoEpollWait()
             }
         }
 
-        int evt_num = epoll_wait(epfd_, epevt, ep_sz_, 1);
+        int evt_num = epoll_wait(epfd_, epevt, ep_sz_, 0);
         if (evt_num > 0) {
-            event_mutex_.Lock();
             this->HandleEvents(epevt, evt_num);
-            event_mutex_.UnLock();
         }
+        event_mutex_.UnLock();
+
+        Sleep(1);
     }
 
     delete[] epevt;

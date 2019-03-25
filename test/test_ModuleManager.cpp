@@ -2,9 +2,10 @@
 #include "framework/ModuleManager.h"
 #include "framework/ModuleImpl/BoringModule.h"
 #include "framework/ModuleImpl/NetwokModule/NetworkModule.h"
-#include "common/string_functions.h"
 #include "framework/ModuleImpl/NetwokModule/NetCallbackImpl/NetEchoCallback.h"
 #include "framework/ModuleImpl/EchoClientModule.h"
+#include "common/string_functions.h"
+#include "common/OptHandler.h"
 
 void test_BoringModule()
 {
@@ -41,6 +42,25 @@ void test_EchoClientModule()
 void test_ModuleManager()
 {
     //test_BoringModule();
-    test_NetworkModule();
-    //test_EchoClientModule();
+}
+
+void test_Network(int argc, char **argv)
+{
+    OptHandler oh;
+    oh.Parse(argc, argv, {
+        {'c', false},
+        {'s', false}
+    }
+    );
+
+    if (oh.HasOpt('s')) {
+        test_NetworkModule();
+    }
+    else if (oh.HasOpt('c')) {
+        test_EchoClientModule();
+    }
+    else {
+        printf("usage: %s <-s|-c>\n", argv[0]);
+    }
+
 }

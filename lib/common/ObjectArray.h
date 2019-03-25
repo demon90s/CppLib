@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <list>
 #include <stdexcept>
+#include "common/string_functions.h"
 
 // 对象数组, 泛型, 随机访问, 动态增长, 预分配内存并回收利用
 // Add(v) 添加一个元素, 返回其下标
@@ -117,9 +118,6 @@ public:
 		arr_[index].constructed = true;
         reuse_index_list_.pop_front();
 
-        if (index == end_.index_)
-            ++end_.index_;
-
         if (index < beg_.index_)
             beg_.index_ = index;
         
@@ -134,10 +132,7 @@ public:
 
                 reuse_index_list_.push_back(index);
 
-                if (index == end_.index_ - 1)
-                    --end_.index_;
-
-                while (beg_ != end_ && !this->Exist(beg_.index_)) {
+                if (index == beg_.index_) {
                     ++beg_;
                 }
             }
@@ -162,14 +157,14 @@ public:
 
     T& operator[](int index) {
         if (!this->Exist(index)) {
-            throw std::out_of_range("ObjectArray out of range");
+            throw std::out_of_range(StringFormat("ObjectArray out of range, index: %d", index).c_str());
         }
         return arr_[index].v;
     }
 
     const T& operator[](int index) const {
         if (!this->Exist(index)) {
-            throw std::out_of_range("ObjectArray out of range");
+            throw std::out_of_range(StringFormat("ObjectArray out of range, index: %d", index).c_str());
         }
         return arr_[index].v;
     }

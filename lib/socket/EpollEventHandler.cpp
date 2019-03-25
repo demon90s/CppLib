@@ -76,13 +76,12 @@ void EpollEventHandler::OnCanWrite()
 {
     DataStruct ds;
     if (!send_data_queue_.TryPop(&ds)) {
+        ep_->ModEvent(netid_, EPOLLIN);
         return;
     }
 
     Socket::Send(socketfd_, ds.data, ds.len);
     delete[] ds.data;
-
-    ep_->ModEvent(netid_, EPOLLIN);
 }
 
 void EpollEventHandler::OnSend(const char *data, int len)
@@ -91,6 +90,7 @@ void EpollEventHandler::OnSend(const char *data, int len)
     ds.data = data;
     ds.len = len;
 
-    if (ep_->ModEvent(netid_, EPOLLIN | EPOLLOUT))
+    if (ep_->ModEvent(netid_, EPOLLIN | EPOLLOUT)) {
         send_data_queue_.TryPush(ds);
+    }
 }
