@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 
 Epoll::Epoll(int epoll_size) : is_exist_(true), listen_socketfd_(-1), epfd_(-1), ep_sz_(epoll_size), 
-    send_data_queue_(epoll_size)
+    send_data_queue_(256)
 {
 
 }

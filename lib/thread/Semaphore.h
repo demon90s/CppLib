@@ -3,7 +3,7 @@
 #include <semaphore.h>
 #include "common/NoCopy.h"
 
-// 封装 posix 线程二进制信号量
+// 封装 posix 线程信号量
 
 class Semaphore {
 public:
