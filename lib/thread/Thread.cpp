@@ -12,7 +12,7 @@ static void* DoThreadFunc(void *param)
     void *ret = p->f(p->param);
 
     delete p;
-    return ret;
+    pthread_exit(ret);
 }
 
 Thread::Thread() : thread_(0)
