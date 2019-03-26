@@ -15,6 +15,10 @@ public:
         echo_client_->GetModuleManager()->Stop();
     }
 
+    void OnRecv(NetID netid, const char *data, int len) override {
+        printf("%ld Recv, netid: %d, data: %s, len: %d\n", time(NULL), netid, data, len);
+    }
+
     void OnConnect(NetID netid, ConnectHandle handle) {
         echo_client_->OnConnect(netid, handle);
     }

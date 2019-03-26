@@ -40,9 +40,14 @@ private:
     void DoEpollWait();
     void HandleEvents(epoll_event *epevt, int evt_num);
 
+    static void* SendThread(void *param);
+    void DoSend();
+
+private:
     bool is_exist_;
 
     Thread epoll_wait_thread_;
+    Thread send_thread;
 
     NoCopy nocpy_;
 

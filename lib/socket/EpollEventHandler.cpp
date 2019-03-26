@@ -114,11 +114,15 @@ void EpollEventHandler::OnCanWrite()
 
 void EpollEventHandler::OnSend(const char *data, int len)
 {
-    DataStruct ds;
-    ds.data = data;
-    ds.len = len;
+    // 直接发送, 不修改 epoll 似乎也是可以的
+    Socket::Send(socketfd_, data, len);
+    delete []data;
 
-    if (ep_->ModEvent(netid_, EPOLLIN | EPOLLOUT)) {
-        send_data_queue_.Push(ds);
-    }
+    // DataStruct ds;
+    // ds.data = data;
+    // ds.len = len;
+
+    // if (ep_->ModEvent(netid_, EPOLLIN | EPOLLOUT)) {
+    //     send_data_queue_.Push(ds);
+    // }
 }

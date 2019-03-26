@@ -36,6 +36,7 @@ bool Epoll::Init(ThreadQueue<IEpollJob*> *job_queue)
 
     is_exist_ = false;
     epoll_wait_thread_.Run(EpollWait, this);
+    send_thread.Run(SendThread, this);
 
     return true;
 }
@@ -47,16 +48,16 @@ void Epoll::Release()
     is_exist_ = true;
     epoll_wait_thread_.Join();
 
+    send_thread.Join();
+
     {
         DataStruct ds;
         while (send_data_queue_.TryPop(&ds)) {
-            if (handlers_.Exist(ds.netid)) {
-                delete []ds.data;
-            }
+            delete []ds.data;
         }
     }
 
-    for (auto handler : handlers_) {
+    for (EpollEventHandler* handler : handlers_) {
         Socket::Close(handler->GetSocket());
         delete handler;
     }
@@ -160,17 +161,6 @@ void Epoll::DoEpollWait()
     epoll_event *epevt = new epoll_event[ep_sz_];
 
     while (!is_exist_) {
-        // 处理 send queue
-        {
-            DataStruct ds;
-            while (send_data_queue_.TryPop(&ds)) {
-                if (handlers_.Exist(ds.netid)) {
-                    EpollEventHandler *handler = handlers_[ds.netid];
-                    handler->OnSend(ds.data, ds.len);
-                }
-            }
-        }
-
         int evt_num = epoll_wait(epfd_, epevt, ep_sz_, 0);
         if (evt_num > 0) {
             this->HandleEvents(epevt, evt_num);
@@ -205,6 +195,28 @@ void Epoll::HandleEvents(epoll_event *epevt, int evt_num)
         }
         else if (ev & EPOLLIN) {
             handler->OnCanRead();
+        }
+    }
+}
+
+void* Epoll::SendThread(void *param)
+{
+    Epoll *pthis = (Epoll*)param;
+
+    pthis->DoSend();
+
+    return 0;
+}
+
+void Epoll::DoSend()
+{
+    DataStruct ds;
+    while (!is_exist_) {
+        while (send_data_queue_.TryPop(&ds, 1000)) {    // TODO 为什么等待1ms 就会造成内存泄露? valgrind 测试
+            if (handlers_.Exist(ds.netid)) {
+                EpollEventHandler *handler = handlers_[ds.netid];
+                handler->OnSend(ds.data, ds.len);
+            }
         }
     }
 }
