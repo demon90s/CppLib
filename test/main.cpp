@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[])
 {
-    //test_Thread();
+    test_Thread();
     //test_ObjectArray();
     //test_OptHandler(argc, argv);
     //test_XmlHandler();
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     //test_ThreadQueue();
     //test_Epoll(argc, argv);
     //test_ModuleManager();
-    test_Network(argc, argv);
+    //test_Network(argc, argv);
 
     return 0;
 }

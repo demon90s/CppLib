@@ -14,7 +14,8 @@ public:
     bool Run(ThreadFunc f, void *param);
 
     bool Join();
-    void Detach();
+    bool Detach();
+    bool Cancel();
 
 private:
     NoCopy nocopy_;

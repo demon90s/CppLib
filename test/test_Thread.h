@@ -13,7 +13,6 @@ private:
     static void* WriteThread(void*);
     void DoWrite();
     Thread m_thread;
-    bool m_is_exit;
 };
 
 //------------------------------------------------

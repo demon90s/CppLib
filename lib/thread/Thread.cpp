@@ -51,10 +51,24 @@ bool Thread::Join()
     return false;
 }
 
-void Thread::Detach()
+bool Thread::Detach()
 {
     if (thread_ != 0) {
-        pthread_detach(thread_);
-        thread_ = 0;
+        if (pthread_detach(thread_) == 0) {
+            thread_ = 0;
+            return true;
+        }
     }
+
+    return false;
+}
+
+bool Thread::Cancel()
+{
+    int res = pthread_cancel(thread_);
+    if (res != 0) {
+        return false;
+    }
+
+    return this->Join();
 }

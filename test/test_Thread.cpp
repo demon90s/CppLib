@@ -2,16 +2,14 @@
 #include "common/clock_functions.h"
 #include <stdio.h>
 
-BoringWriter::BoringWriter() : m_is_exit(false)
+BoringWriter::BoringWriter()
 {
-    m_is_exit = false;
     m_thread.Run(WriteThread, this);
 }
 
 BoringWriter::~BoringWriter()
 {
-    m_is_exit = true;
-    m_thread.Join();
+    m_thread.Cancel();
 }
 
 void* BoringWriter::WriteThread(void* p)
@@ -24,7 +22,7 @@ void* BoringWriter::WriteThread(void* p)
 
 void BoringWriter::DoWrite()
 {
-    while (!m_is_exit)
+    while (true)
     {
         printf("[%ld] Haha I am so boring\n", time(NULL));
         Sleep(1000);

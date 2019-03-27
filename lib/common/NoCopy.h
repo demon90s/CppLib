@@ -4,8 +4,8 @@
 
 class NoCopy {
 public:
-    NoCopy() {}
-    ~NoCopy() {}
+    NoCopy() = default;
+    ~NoCopy() = default;
     NoCopy(const NoCopy&) = delete;
     NoCopy& operator=(const NoCopy&) = delete;
 };
