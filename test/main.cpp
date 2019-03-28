@@ -7,10 +7,11 @@
 #include "test_ThreadQueue.h"
 #include "test_Epoll.h"
 #include "test_ModuleManager.h"
+#include "test_Logger.h"
 
 int main(int argc, char *argv[])
 {
-    test_Thread();
+    //test_Thread();
     //test_ObjectArray();
     //test_OptHandler(argc, argv);
     //test_XmlHandler();
@@ -19,6 +20,7 @@ int main(int argc, char *argv[])
     //test_Epoll(argc, argv);
     //test_ModuleManager();
     //test_Network(argc, argv);
+    test_Logger();
 
     return 0;
 }

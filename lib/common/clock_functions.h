@@ -2,7 +2,8 @@
 
 #include <unistd.h>
 #include <sys/time.h>
-#include <time.h>
+#include <ctime>
+#include <string>
 
 // 挂起执行线程若干毫秒
 inline void Sleep(int ms)
@@ -34,4 +35,22 @@ inline unsigned long GetTimeMs()
 	timeval time;
 	gettimeofday(&time, &tz);
 	return (time.tv_sec * 1000 + time.tv_usec / 1000);
+}
+
+// 获取时间描述 格式固定是 YYYY-MM-DD HH:MM:SS
+inline void GetAscTime(char buffer[], size_t len)
+{
+    time_t t;
+    time(&t);
+
+	struct tm *p_tm = localtime(&t);
+
+	strftime(buffer, len, "%Y-%m-%d %H:%M:%S", p_tm);
+}
+
+inline std::string GetAscTime()
+{
+    char asc_time[128];
+    GetAscTime(asc_time, sizeof(asc_time));
+    return asc_time;
 }
