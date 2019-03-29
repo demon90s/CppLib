@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
     //test_ThreadQueue();
     //test_Epoll(argc, argv);
     //test_ModuleManager();
-    //test_Network(argc, argv);
-    test_Logger();
+    test_Network(argc, argv);
+    //test_Logger();
 
     return 0;
 }

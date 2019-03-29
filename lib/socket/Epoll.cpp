@@ -101,23 +101,29 @@ NetID Epoll::AddEvent(int socketfd, int evt)
 {
     EpollEventHandler *handler = new EpollEventHandler(this, socketfd);
 
+	handler_mutex_.Lock();
     struct epoll_event ev;
     ev.events = evt;
     ev.data.ptr = handler;
     if (epoll_ctl(epfd_, EPOLL_CTL_ADD, socketfd, &ev) != 0) {
-        delete handler;
+        handler_mutex_.UnLock();
+		dirty_handlers_.push_back(handler);
         return -1;
     }
 
     NetID netid = handlers_.Add(handler);
     handler->SetNetID(netid);
 
+	handler_mutex_.UnLock();
+
     return netid;
 }
 
 void Epoll::DelEvent(NetID netid, int evt)
 {
+	handler_mutex_.Lock();
     if (!handlers_.Exist(netid)) {
+		handler_mutex_.UnLock();
         return;
     }
     EpollEventHandler *handler = handlers_[netid];
@@ -127,17 +133,21 @@ void Epoll::DelEvent(NetID netid, int evt)
     ev.data.ptr = handler;
     epoll_ctl(epfd_, EPOLL_CTL_DEL, handler->GetSocket(), &ev);
 
-    delete handler;
-
     handlers_.Remove(netid);
+	handler_mutex_.UnLock();
+
+	dirty_handlers_.push_back(handler);
 }
 
 bool Epoll::ModEvent(NetID netid, int evt)
 {
+	handler_mutex_.Lock();
     if (!handlers_.Exist(netid)) {
+		handler_mutex_.UnLock();
         return false;
     }
     EpollEventHandler *handler = handlers_[netid];
+    handler_mutex_.UnLock();
 
     struct epoll_event ev;
     ev.events = evt;
@@ -161,6 +171,8 @@ void Epoll::DoEpollWait()
     epoll_event *epevt = new epoll_event[ep_sz_];
 
     while (!is_exist_) {
+		this->DeleteDirtyHandlers();
+
         int evt_num = epoll_wait(epfd_, epevt, ep_sz_, 0);
         if (evt_num > 0) {
             this->HandleEvents(epevt, evt_num);
@@ -212,11 +224,25 @@ void Epoll::DoSend()
 {
     DataStruct ds;
     while (!is_exist_) {
-        while (send_data_queue_.TryPop(&ds, 1000)) {    // TODO 为什么等待1ms 就会造成内存泄露? valgrind 测试
+        while (send_data_queue_.TryPop(&ds, 1)) {    // TODO 为什么等待1ms 就会造成内存泄露? valgrind 测试, 把 Echo 频率调快就更容易重现
+			handler_mutex_.Lock();
             if (handlers_.Exist(ds.netid)) {
                 EpollEventHandler *handler = handlers_[ds.netid];
+                handler_mutex_.UnLock();
+
                 handler->OnSend(ds.data, ds.len);
             }
+			handler_mutex_.UnLock();
         }
+	}
+}
+
+void Epoll::DeleteDirtyHandlers()
+{
+    if (dirty_handlers_.size() > 0) {
+        for (auto handler : dirty_handlers_)
+            delete handler;
+
+        dirty_handlers_.clear();
     }
 }

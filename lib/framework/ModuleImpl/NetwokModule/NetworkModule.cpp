@@ -16,7 +16,7 @@
 #include <sys/types.h>
 
 NetworkModule::NetworkModule(unsigned short listen_port) : listen_port_(listen_port), is_exist_(false), callback_(nullptr), 
-    job_queue_(256), connect_queue_(4)
+	job_queue_(256), connect_asyn_queue_(4)
 {
 }
 
@@ -30,7 +30,7 @@ bool NetworkModule::Init()
 {
     std::cout << "NetworkModule::Init" << std::endl;
 
-    for (int i = 0; i < ELEM_NUM(connect_asyn_thread); i++)
+	for (int i = 0; i < CONNECT_ASYN_THREAD_COUNT; i++)
         connect_asyn_thread[i].Run(ConnectAsynWork, this);
 
     std::string error_msg;
@@ -101,11 +101,11 @@ void NetworkModule::Release()
 
     ep_.Release();
 
-    for (int i = 0; i < ELEM_NUM(connect_asyn_thread); i++)
+	for (int i = 0; i < CONNECT_ASYN_THREAD_COUNT; i++)
         connect_asyn_thread[i].Join();
 
-    ConnectStruct cs;
-    while (connect_queue_.TryPop(&cs)) {
+	ConnectAsynStruct cs;
+	while (connect_asyn_queue_.TryPop(&cs)) {
     }
 
     IEpollJob *job;
@@ -144,6 +144,9 @@ bool NetworkModule::StartServer(unsigned short listen_port, std::string &error_m
 
 void NetworkModule::SetCallback(INetCallback *callback)
 {
+	if (callback_)
+		delete callback_;
+
     callback_ = callback;
 }
 
@@ -196,21 +199,20 @@ bool NetworkModule::Connect(const char *ip, unsigned short port, unsigned long t
     return false;
 }
 
-ConnectHandle NetworkModule::ConnectAsyn(const char *ip, unsigned short port, unsigned long timeout_ms)
+ConnectAsynHandle NetworkModule::ConnectAsyn(const char *ip, unsigned short port, unsigned long timeout_ms)
 {
-    static ConnectHandle handle_gen = 0;
+	static ConnectAsynHandle handle_gen = 0;
 
-    connect_mutex_.Lock();
-    ++handle_gen;
+	connect_asyn_mutex_.Lock();
+	int handle = ++handle_gen;
+	connect_asyn_mutex_.UnLock();
 
-    ConnectStruct cs;
-    cs.handle = handle_gen;
+	ConnectAsynStruct cs;
+	cs.handle = handle;
     cs.ip = ip;
     cs.port = port;
     cs.timeout_ms = timeout_ms;
-    connect_queue_.Push(cs);
-
-    connect_mutex_.UnLock();
+	connect_asyn_queue_.Push(cs);
 
     return cs.handle;
 }
@@ -225,11 +227,11 @@ void* NetworkModule::ConnectAsynWork(void *param)
 
 void NetworkModule::DoConnectAsynWork()
 {
-    ConnectStruct cs;
+	ConnectAsynStruct cs;
     NetID netid;
 
     while (!is_exist_) {
-        while (connect_queue_.TryPop(&cs)) {
+		while (connect_asyn_queue_.TryPop(&cs)) {
             bool ret = this->Connect(cs.ip.c_str(), cs.port, cs.timeout_ms, &netid);
 
             if (!ret)

@@ -21,14 +21,14 @@ public:
 
     void Release() override;
 
-    void OnConnect(NetID netid, ConnectHandle handle);
+    void OnConnect(NetID netid, ConnectAsynHandle handle);
 
 private:
     unsigned long m_next_echo_time;
     NetworkModule *network_;
 
     NetID server_netid_;
-    ConnectHandle connect_server_handle_;
+    ConnectAsynHandle connect_server_handle_;
 
     int m_cur_send_times;
     const int m_send_times;

@@ -19,7 +19,7 @@ public:
         printf("%ld Recv, netid: %d, data: %s, len: %d\n", time(NULL), netid, data, len);
     }
 
-    void OnConnect(NetID netid, ConnectHandle handle) {
+    void OnConnect(NetID netid, ConnectAsynHandle handle) {
         echo_client_->OnConnect(netid, handle);
     }
 
@@ -89,7 +89,7 @@ void EchoClientModule::Release()
     std::cout << "EchoClientModule::Release" << std::endl;
 }
 
-void EchoClientModule::OnConnect(NetID netid, ConnectHandle handle)
+void EchoClientModule::OnConnect(NetID netid, ConnectAsynHandle handle)
 {
     if (netid == -1) {
         std::cout << "EchoClientModule Connect server aysn failed, stop\n";

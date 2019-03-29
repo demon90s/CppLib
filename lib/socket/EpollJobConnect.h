@@ -5,11 +5,11 @@
 
 class EpollJobConnect : public IEpollJob {
 public:
-    EpollJobConnect(NetID netid, ConnectHandle connect_handle) : 
+    EpollJobConnect(NetID netid, ConnectAsynHandle connect_handle) : 
         IEpollJob(EpollJobType::Connect, netid), connect_handle_(connect_handle) {}
 
-    ConnectHandle GetHandle() const { return connect_handle_; }
+    ConnectAsynHandle GetHandle() const { return connect_handle_; }
 
 private:
-    ConnectHandle connect_handle_;  // -1 代表失败
+    ConnectAsynHandle connect_handle_;  // -1 代表失败
 };

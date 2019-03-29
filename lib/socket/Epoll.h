@@ -43,6 +43,8 @@ private:
     static void* SendThread(void *param);
     void DoSend();
 
+	void DeleteDirtyHandlers();		// 延迟释放掉没用的 handler
+
 private:
     bool is_exist_;
 
@@ -57,8 +59,10 @@ private:
 
     ThreadQueue<IEpollJob*> *job_queue_;        // 生产消费队列
 
+	Mutex handler_mutex_;
     ObjectArray<EpollEventHandler*> handlers_;  // 事件处理对象列表, 索引是 netid TODO 线程不安全
-    
+	std::list<EpollEventHandler*> dirty_handlers_; // handlers 延迟删除列表
+
     struct DataStruct {
         char *data;
         int len;

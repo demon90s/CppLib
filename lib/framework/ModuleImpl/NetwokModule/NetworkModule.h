@@ -27,7 +27,7 @@ public:
     bool Send(NetID netid, const char *data, int len);
 
     bool Connect(const char *ip, unsigned short port, unsigned long timeout_ms, NetID *netid_out);
-    ConnectHandle ConnectAsyn(const char *ip, unsigned short port, unsigned long timeout_ms);
+	ConnectAsynHandle ConnectAsyn(const char *ip, unsigned short port, unsigned long timeout_ms);
 
 private:
     static void* ConnectAsynWork(void *param);
@@ -40,14 +40,15 @@ private:
 
     ThreadQueue<IEpollJob*> job_queue_;
 
-    Thread connect_asyn_thread[4];
+	static const int CONNECT_ASYN_THREAD_COUNT = 4;
+	Thread connect_asyn_thread[CONNECT_ASYN_THREAD_COUNT];
 
-    struct ConnectStruct {
+	struct ConnectAsynStruct {
         std::string ip;
         unsigned short port;
-        ConnectHandle handle;
+		ConnectAsynHandle handle;
         unsigned long timeout_ms; 
     };
-    ThreadQueue<ConnectStruct> connect_queue_;
-    Mutex connect_mutex_;
+	ThreadQueue<ConnectAsynStruct> connect_asyn_queue_;
+	Mutex connect_asyn_mutex_;
 };

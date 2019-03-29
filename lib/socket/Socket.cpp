@@ -84,12 +84,12 @@ bool Socket::Connect(int socketfd, const char *ip, unsigned short port)
 
 int Socket::Send(int socketfd, const void* buf, int size)
 {
-	return write(socketfd, buf, size);
+	return send(socketfd, buf, size, 0);
 }
 
 int Socket::Recv(int socketfd, void *buf, int size)
 {
-	return read(socketfd, buf, size);
+	return recv(socketfd, buf, size, 0);
 }
 
 bool Socket::SetNonBlock(int socketfd)

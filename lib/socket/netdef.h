@@ -1,4 +1,4 @@
 #pragma once
 
 typedef int NetID;
-typedef unsigned int ConnectHandle;             // 异步连接句柄
+typedef unsigned int ConnectAsynHandle;             // 异步连接句柄
