@@ -116,7 +116,6 @@ void EpollEventHandler::OnSend(const char *data, int len)
 {
     // 直接发送, 不修改 epoll 似乎也是可以的
     Socket::Send(socketfd_, data, len);
-    delete []data;
 
     // DataStruct ds;
     // ds.data = data;

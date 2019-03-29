@@ -224,7 +224,7 @@ void Epoll::DoSend()
 {
     DataStruct ds;
     while (!is_exist_) {
-        while (send_data_queue_.TryPop(&ds, 1)) {    // TODO 为什么等待1ms 就会造成内存泄露? valgrind 测试, 把 Echo 频率调快就更容易重现
+        while (send_data_queue_.TryPop(&ds, 1)) {
 			handler_mutex_.Lock();
             if (handlers_.Exist(ds.netid)) {
                 EpollEventHandler *handler = handlers_[ds.netid];
@@ -232,6 +232,7 @@ void Epoll::DoSend()
 
                 handler->OnSend(ds.data, ds.len);
             }
+			delete []ds.data;
 			handler_mutex_.UnLock();
         }
 	}
