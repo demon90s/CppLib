@@ -8,6 +8,7 @@
 #include "test_Epoll.h"
 #include "test_ModuleManager.h"
 #include "test_Logger.h"
+#include "test_MsgQueue.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,8 +20,9 @@ int main(int argc, char *argv[])
     //test_ThreadQueue();
     //test_Epoll(argc, argv);
     //test_ModuleManager();
-    test_Network(argc, argv);
+    //test_Network(argc, argv);
     //test_Logger();
+    test_MsgQueue(argc, argv);
 
     return 0;
 }

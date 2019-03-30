@@ -17,8 +17,8 @@ void test_Logger()
     boringlog.Init(&logger, "BoringLog", "Boring");
 
     for (int i = 0; i < 60 * 5; i ++) {
-        stdlog.Write(LogLevel::Normal, "Hello %d", i);
-        boringlog.Write(LogLevel::Warning, "I am fucking boring %d", i);
+        stdlog.Printf(LogLevel::Normal, "Hello %d", i);
+        boringlog.Printf(LogLevel::Warning, "I am fucking boring %d", i);
         Sleep(1000);
     }
 }
