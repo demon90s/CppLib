@@ -1,5 +1,7 @@
 #pragma once
 
+#include "netdef.h"
+
 enum class EpollJobType {
     Accept,
     Recv,
