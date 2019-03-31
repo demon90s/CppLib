@@ -64,6 +64,29 @@ Node& Node::operator=(const Node &node)
     return *this;
 }
 
+void Node::SetValue(const char *v)
+{
+    switch (type_) {
+        case NodeType::Char:
+            this->SetChar(std::stoi(v));
+            break;
+        case NodeType::Short:
+            this->SetShort(std::stoi(v));
+            break;
+        case NodeType::Int:
+            this->SetInt(std::stoi(v));
+            break;
+        case NodeType::LongLong:   
+            this->SetLongLong(std::stoll(v));
+            break;
+        case NodeType::String:
+            this->SetString(v);
+            break;
+        default:
+            break;
+    }
+}
+
 std::string Node::GetValue() const
 {
     switch (type_) {

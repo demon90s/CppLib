@@ -11,6 +11,7 @@ public:
     MySqlTable(MySqlHandler *mysql_handler);
 
     bool InitTables();
+    MySqlFindRes InitFindRes(const std::string &table);
 
 private:
     NodeType GetFieldType(int type);
@@ -22,7 +23,9 @@ private:
 
     MySqlHandler *mysql_handler_;
 
-    typedef std::unordered_multimap<std::string, MySqlField> OneTable; // field_name -> field_info
-    typedef std::unordered_map<std::string, OneTable> AllTable; // table_name -> { field_name -> field_info, ... }
+    typedef std::vector<MySqlField> MetaTable;
+    typedef std::unordered_map<std::string, MetaTable> AllTable;
     AllTable tables_;
+
+    std::unordered_map<std::string, MySqlFindRes> init_findreses_;
 };

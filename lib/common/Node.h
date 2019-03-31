@@ -28,6 +28,7 @@ public:
     Node(const Node&);
     Node& operator=(const Node &node);
 
+    void SetValue(const char *v);
     std::string GetValue() const;
 
     void SetType(NodeType type);

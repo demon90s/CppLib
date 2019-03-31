@@ -29,8 +29,13 @@ bool MySqlTable::InitTables()
         if (!mysql_handler_->Query(StringFormat("SELECT * FROM %s", table_name.c_str()), true))
             return false;
 
-        OneTable one_table;
+        MetaTable meta_table;
         MYSQL_FIELD *field_ptr;
+
+        int field_index = 0;
+        MySqlFindRes &init_findres = init_findreses_[table_name];
+        init_findres.meta_row_.clear();
+
         while ((field_ptr = mysql_fetch_field(mysql_handler_->last_res_)) != nullptr) {
             MySqlField field_info;
             field_info.name_ = field_ptr->name;
@@ -41,10 +46,13 @@ bool MySqlTable::InitTables()
             }
             field_info.node_.SetType(type);
 
-            one_table.emplace(field_ptr->name, field_info);
+            meta_table.push_back(field_info);
+
+            init_findres.field_to_index_map[field_info.name_] = field_index++;
+            init_findres.meta_row_.push_back(field_info.node_);
         }
 
-        tables.emplace(table_name, one_table);
+        tables.emplace(table_name, meta_table);
     }
 
     tables_.swap(tables);
@@ -52,6 +60,15 @@ bool MySqlTable::InitTables()
     this->ShowTables();
 
     return true;
+}
+
+MySqlFindRes MySqlTable::InitFindRes(const std::string &table)
+{
+    auto it = init_findreses_.find(table);
+    if (it == init_findreses_.end())
+        return MySqlFindRes();
+
+    return it->second;
 }
 
 NodeType MySqlTable::GetFieldType(int type)
@@ -81,10 +98,9 @@ void MySqlTable::ShowTables() const
     std::cout << "====ShowTables Begin======= total " << tables_.size() << " tables\n";
     for (const auto &p: tables_) {
         std::cout << p.first << std::endl;
-        const OneTable &one_table = p.second;
-        for (const auto &field_p : one_table) {
-            const MySqlField &file_info = field_p.second;
-            std::cout << "\t" << file_info.name_ <<  " --- " << file_info.node_.GetTypeStr() <<  std::endl;
+        const MetaTable &meta_table = p.second;
+        for (const MySqlField &field : meta_table) {
+            std::cout << "\t" << field.name_ <<  " --- " << field.node_.GetTypeStr() <<  std::endl;
         }
     }
 

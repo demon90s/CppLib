@@ -18,12 +18,13 @@ public:
     bool Insert(const MySqlOpStruct &op);
     bool Remove(const MySqlOpStruct &op);
     bool Update(const MySqlOpStruct &set_op, const MySqlOpStruct &cmp_op);
-    //FIND TODO
+    MySqlFindRes Find(const MySqlOpStruct &cmp_op);
 
     std::string ErrorDesc();
 
 private:
     bool Query(const std::string &sql, bool store_result = false);
+    std::string MakeConditions(const MySqlOpStruct cmp_op);
 
     NoCopy nocopy_;
 

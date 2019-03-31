@@ -75,47 +75,7 @@ bool MySqlHandler::Remove(const MySqlOpStruct &op)
     if (op.op_field_.size() > 0) {
         sql += " WHERE ";
 
-        for (size_t i = 0; i < op.op_field_.size(); i++) {
-            const MySqlField &field = op.op_field_[i];
-            std::string sub_condition = field.name_;
-            switch (field.cmp_type_)
-            {
-                case MySqlCmpType::Equal:
-                    if (field.node_.GetType() == NodeType::String) {
-                        sub_condition += " LIKE ";
-                    }
-                    else {
-                        sub_condition += '=';
-                    }
-                    break;
-                default:
-                    break;
-            }
-            if (field.node_.GetType() == NodeType::String) {
-                sub_condition += "'";
-                sub_condition += field.node_.GetValue();
-                sub_condition += "'";
-            }
-            else {
-                sub_condition += field.node_.GetValue();
-            }
-
-            if (i < op.op_field_.size() - 1) {
-                switch (op.cmp_logic)
-                {
-                    case MySqlCmpLogic::And:
-                        sub_condition += " AND";
-                        break;
-                    case MySqlCmpLogic::Or:
-                        sub_condition += " OR";
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            sql += sub_condition;
-        }
+        this->MakeConditions(op);
     }
 
     return this->Query(sql);
@@ -149,50 +109,41 @@ bool MySqlHandler::Update(const MySqlOpStruct &set_op, const MySqlOpStruct &cmp_
     if (cmp_op.op_field_.size() > 0) {
         sql += " WHERE ";
 
-        for (size_t i = 0; i < cmp_op.op_field_.size(); i++) {
-            const MySqlField &field = cmp_op.op_field_[i];
-            std::string sub_condition = field.name_;
-            switch (field.cmp_type_)
-            {
-                case MySqlCmpType::Equal:
-                    if (field.node_.GetType() == NodeType::String) {
-                        sub_condition += " LIKE ";
-                    }
-                    else {
-                        sub_condition += '=';
-                    }
-                    break;
-                default:
-                    break;
-            }
-            if (field.node_.GetType() == NodeType::String) {
-                sub_condition += "'";
-                sub_condition += field.node_.GetValue();
-                sub_condition += "'";
-            }
-            else {
-                sub_condition += field.node_.GetValue();
-            }
-
-            if (i < cmp_op.op_field_.size() - 1) {
-                switch (cmp_op.cmp_logic)
-                {
-                    case MySqlCmpLogic::And:
-                        sub_condition += " AND";
-                        break;
-                    case MySqlCmpLogic::Or:
-                        sub_condition += " OR";
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            sql += sub_condition;
-        }
+        sql += this->MakeConditions(cmp_op);
     }
 
     return this->Query(sql);
+}
+
+MySqlFindRes MySqlHandler::Find(const MySqlOpStruct &cmp_op)
+{
+    // SELECT * FROM table WHERE conditions
+
+    std::string sql = "SELECT * FROM " + cmp_op.table_name_;
+    
+    if (cmp_op.op_field_.size() > 0) {
+        sql += " WHERE";
+        sql += this->MakeConditions(cmp_op);
+    }
+
+    if (!this->Query(sql, true))
+        return MySqlFindRes();
+
+    MySqlFindRes res = table_.InitFindRes(cmp_op.table_name_);
+
+    MYSQL_ROW sqlrow;
+    while ((sqlrow = mysql_fetch_row(last_res_))) {
+        MySqlFindRes::Row row(&res.meta_row_);
+
+        int field_count = mysql_field_count(mysql_);
+        for (int i = 0; i < field_count; ++i) {
+            row.SetNode(i, sqlrow[i]);
+        }
+
+        res.res_.push_back(row);
+    }
+
+    return res;
 }
 
 std::string MySqlHandler::ErrorDesc()
@@ -224,4 +175,52 @@ bool MySqlHandler::Query(const std::string &sql, bool store_result)
     }
 
     return true;
+}
+
+std::string MySqlHandler::MakeConditions(const MySqlOpStruct cmp_op)
+{
+    std::string conditions;
+    for (size_t i = 0; i < cmp_op.op_field_.size(); i++) {
+        const MySqlField &field = cmp_op.op_field_[i];
+        std::string sub_condition = field.name_;
+        switch (field.cmp_type_)
+        {
+            case MySqlCmpType::Equal:
+                if (field.node_.GetType() == NodeType::String) {
+                    sub_condition += " LIKE ";
+                }
+                else {
+                    sub_condition += '=';
+                }
+                break;
+            default:
+                break;
+        }
+        if (field.node_.GetType() == NodeType::String) {
+            sub_condition += "'";
+            sub_condition += field.node_.GetValue();
+            sub_condition += "'";
+        }
+        else {
+            sub_condition += field.node_.GetValue();
+        }
+
+        if (i < cmp_op.op_field_.size() - 1) {
+            switch (cmp_op.cmp_logic)
+            {
+                case MySqlCmpLogic::And:
+                    sub_condition += " AND";
+                    break;
+                case MySqlCmpLogic::Or:
+                    sub_condition += " OR";
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        conditions += sub_condition;
+    }
+
+    return conditions;
 }
