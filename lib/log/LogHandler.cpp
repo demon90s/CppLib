@@ -1,6 +1,7 @@
 #include "LogHandler.h"
 #include "common/clock_functions.h"
 #include "common/string_functions.h"
+#include "colorprintf.h"
 #include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -89,7 +90,18 @@ void LogHandler::TryFlush()
         if (ofs_.is_open())
             ofs_ << log_str << std::flush;
         else {
-            std::cout << log_str << std::flush;
+            if (isatty(fileno(stdout))) {
+                int color = 1;
+                if (log_item.loglevel_ == LogLevel::Warning)
+                    color = 2;
+                else if (log_item.loglevel_ == LogLevel::Error)
+                    color = 0;
+
+                colorprintf(color, "%s", log_str.c_str());
+            }
+            else {
+                std::cout << log_str << std::flush;
+            }
         }
     }
 }
