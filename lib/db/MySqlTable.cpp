@@ -58,7 +58,7 @@ bool MySqlTable::InitTables()
 
     tables_.swap(tables);
 
-    this->ShowTables();
+    //this->ShowTables();
 
     return true;
 }
@@ -69,7 +69,7 @@ MySqlFindRes MySqlTable::InitFindRes(const std::string &table)
     if (it == init_findreses_.end())
         return MySqlFindRes();
 
-    return it->second;
+    return std::make_shared<_MySqlFindRes>(*it->second);
 }
 
 NodeType MySqlTable::GetFieldType(int type)

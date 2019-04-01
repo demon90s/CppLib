@@ -56,20 +56,17 @@ void ModuleManager::Run(unsigned long update_ms)
     for (auto it = module_queue_.begin(); it != module_queue_.end();) {
         IModule *module = *it;
         if (!module->Init()) {
-            module->Release();
             it = module_queue_.erase(it);
         }
         else {
             ++it;
         }
-            
     }
 
     // Start
     for (auto it = module_queue_.begin(); it != module_queue_.end();) {
         IModule *module = *it;
         if (!module->Start()) {
-            module->Release();
             it = module_queue_.erase(it);
         }
         else {
@@ -78,13 +75,15 @@ void ModuleManager::Run(unsigned long update_ms)
     }
 
     // Update
-    while (!modulemanager_exist) {
-        for (auto it = module_queue_.begin(); it != module_queue_.end(); ++it) {
-            IModule *module = *it;
-            module->Update();
-        }
+    if (module_queue_.size() > 0) {
+        while (!modulemanager_exist) {
+            for (auto it = module_queue_.begin(); it != module_queue_.end(); ++it) {
+                IModule *module = *it;
+                module->Update();
+            }
 
-        Sleep(update_ms);
+            Sleep(update_ms);
+        }
     }
     
     // Release
