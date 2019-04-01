@@ -34,7 +34,8 @@ bool MySqlTable::InitTables()
 
         int field_index = 0;
         MySqlFindRes &init_findres = init_findreses_[table_name];
-        init_findres.meta_row_.clear();
+        init_findres = std::make_shared<_MySqlFindRes>();
+        init_findres->meta_row_.clear();
 
         while ((field_ptr = mysql_fetch_field(mysql_handler_->last_res_)) != nullptr) {
             MySqlField field_info;
@@ -48,8 +49,8 @@ bool MySqlTable::InitTables()
 
             meta_table.push_back(field_info);
 
-            init_findres.field_to_index_map[field_info.name_] = field_index++;
-            init_findres.meta_row_.push_back(field_info.node_);
+            init_findres->field_to_index_map[field_info.name_] = field_index++;
+            init_findres->meta_row_.push_back(field_info.node_);
         }
 
         tables.emplace(table_name, meta_table);

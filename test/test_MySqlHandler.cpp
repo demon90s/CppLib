@@ -60,4 +60,19 @@ void test_MySqlHandler()
         std::cerr << "MySql Update failed: " << mh.ErrorDesc() << std::endl;
         return;
     }
+
+    // test find
+    cmp_op.table_name_ = "foo";
+    MySqlFindRes res = mh.Find(cmp_op);
+    if (!res) {
+        std::cerr << "MySql Find failed: " << mh.ErrorDesc() << std::endl;
+        return;
+    }
+    for (size_t i = 0; i < res->res_.size(); i++) {
+        printf("%zu\t", i);
+        printf("prof: %c\t", res->res_[i].GetNode("prof").GetChar());
+        printf("name: %s\t", res->res_[i].GetNode("name").GetString());
+        printf("age: %d\t", res->res_[i].GetNode("age").GetShort());
+        printf("\n");
+    }
 }

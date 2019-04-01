@@ -75,7 +75,7 @@ bool MySqlHandler::Remove(const MySqlOpStruct &op)
     if (op.op_field_.size() > 0) {
         sql += " WHERE ";
 
-        this->MakeConditions(op);
+        sql += this->MakeConditions(op);
     }
 
     return this->Query(sql);
@@ -122,25 +122,27 @@ MySqlFindRes MySqlHandler::Find(const MySqlOpStruct &cmp_op)
     std::string sql = "SELECT * FROM " + cmp_op.table_name_;
     
     if (cmp_op.op_field_.size() > 0) {
-        sql += " WHERE";
+        sql += " WHERE ";
         sql += this->MakeConditions(cmp_op);
     }
 
     if (!this->Query(sql, true))
-        return MySqlFindRes();
+        return nullptr;
 
     MySqlFindRes res = table_.InitFindRes(cmp_op.table_name_);
+    if (!res)
+        return nullptr;
 
     MYSQL_ROW sqlrow;
     while ((sqlrow = mysql_fetch_row(last_res_))) {
-        MySqlFindRes::Row row(&res.meta_row_);
+        _MySqlFindRes::Row row(&res->meta_row_, &res->field_to_index_map);
 
         int field_count = mysql_field_count(mysql_);
         for (int i = 0; i < field_count; ++i) {
             row.SetNode(i, sqlrow[i]);
         }
 
-        res.res_.push_back(row);
+        res->res_.push_back(row);
     }
 
     return res;
