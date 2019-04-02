@@ -73,6 +73,7 @@ void EpollEventHandler::OnCanRead()
         invalid_package = true;
     }
     else {
+        // 头带长度, 处理黏包
         int package_len = *(int*)(tmp_data);
         while (len >= package_len) {
             IEpollJob *job = new EpollJobRecv(netid_, tmp_data + sizeof(int), package_len);
