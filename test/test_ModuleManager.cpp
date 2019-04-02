@@ -2,7 +2,6 @@
 #include "framework/ModuleManager.h"
 #include "framework/ModuleImpl/BoringModule.h"
 #include "framework/ModuleImpl/LogModule/LogModule.h"
-#include "framework/ModuleImpl/DBModule/DBModule.h"
 #include "framework/ModuleImpl/NetwokModule/NetworkModule.h"
 #include "framework/ModuleImpl/NetwokModule/NetCallbackImpl/NetEchoCallback.h"
 #include "framework/ModuleImpl/EchoClientModule/EchoClientModule.h"
@@ -13,7 +12,6 @@ void test_BoringModule()
 {
     ModuleManager mm;
     mm.RegisterModule(MakeString(LogModule), new LogModule("./log"));
-    mm.RegisterModule(MakeString(DBModule), new DBModule("diwen", "123456", "test"));
     mm.RegisterModule("BoringModule", new BoringModule);
 
     mm.Run(1);

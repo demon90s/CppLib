@@ -148,6 +148,21 @@ MySqlFindRes MySqlHandler::Find(const MySqlOpStruct &cmp_op)
     return res;
 }
 
+void MySqlHandler::BeginTrasaction()
+{
+    this->Query("BEGIN");
+}
+
+void MySqlHandler::Commit()
+{
+    mysql_commit(mysql_);
+}
+
+void MySqlHandler::Rollback()
+{
+    mysql_rollback(mysql_);
+}
+
 std::string MySqlHandler::ErrorDesc()
 {
     return StringFormat("(%u) %s", mysql_errno(mysql_), mysql_error(mysql_));

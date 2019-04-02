@@ -20,6 +20,10 @@ public:
     bool Update(const MySqlOpStruct &set_op, const MySqlOpStruct &cmp_op);
     MySqlFindRes Find(const MySqlOpStruct &cmp_op);
 
+    void BeginTrasaction();
+    void Commit();
+    void Rollback();
+
     std::string ErrorDesc();
 
 private:

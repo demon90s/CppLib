@@ -12,6 +12,8 @@ void test_MySqlHandler()
     }
     std::cout << "MySql Connect succ.\n";
 
+    mh.BeginTrasaction();
+
     MySqlOpStruct op;
 
     // test insert
@@ -75,4 +77,7 @@ void test_MySqlHandler()
         printf("age: %d\t", res->res_[i].GetNode("age").GetShort());
         printf("\n");
     }
+
+    mh.Commit();      // if not commit when trasaction begin, nothing happened
+    //mh.Rollback();  // if rollback, nothing happened, check table
 }
