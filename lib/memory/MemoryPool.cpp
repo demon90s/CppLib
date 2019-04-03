@@ -29,10 +29,10 @@ void MemoryPool::Free(void *mem)
 
 void MemoryPool::Increase()
 {
-    void *block_head = malloc(block_sz_ * increase_count_);
+    void* const block_head = malloc(block_sz_ * increase_count_);
     alloc_mem_list_.push_back(block_head);
 
     for (int i = 0; i < increase_count_; i++) {
-        unused_mem_list_.push_back((char*)block_head + block_sz_);
+        unused_mem_list_.push_back((char*)block_head + block_sz_ * i);
     }
 }

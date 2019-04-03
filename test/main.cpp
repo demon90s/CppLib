@@ -10,6 +10,7 @@
 #include "test_Logger.h"
 #include "test_MsgQueue.h"
 #include "test_MySqlHandler.h"
+#include "test_Memory.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,7 +25,8 @@ int main(int argc, char *argv[])
     //test_Network(argc, argv);
     //test_Logger();
     //test_MsgQueue(argc, argv);
-    test_MySqlHandler();
+    //test_MySqlHandler();
+    test_Memory();
 
     return 0;
 }
