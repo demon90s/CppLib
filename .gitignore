@@ -3,3 +3,4 @@ build/
 CMakeLists.txt.user
 .vscode/launch.json
 .vscode/
+3rd/mysql/lib/libmysql.so.16

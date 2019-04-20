@@ -11,6 +11,7 @@
 #include "test_MsgQueue.h"
 #include "test_MySqlHandler.h"
 #include "test_Memory.h"
+#include "test_Heap.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,7 +27,8 @@ int main(int argc, char *argv[])
     //test_Logger();
     //test_MsgQueue(argc, argv);
     //test_MySqlHandler();
-    test_Memory();
+    //test_Memory();
+    test_Heap();
 
     return 0;
 }

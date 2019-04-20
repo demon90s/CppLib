@@ -5,7 +5,6 @@
 #include "common/NoCopy.h"
 
 // 非线程安全的内存池, 需要用户主动重载 operator new 和 operator delete 运算符 (可用宏代替)
-// 不做内存收缩工作
 
 #define MEMORY_INCREASE_COUNT 64
 
