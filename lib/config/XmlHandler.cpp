@@ -63,7 +63,7 @@ const char * XmlHandler::GetValueStr(const char *xml_path) const
 
 	std::vector<std::string> node_list = SplitString(xml_path, "/");
 
-	// ±ØĞë°üÀ¨¸ù½Úµã
+	// å¿…é¡»åŒ…æ‹¬æ ¹èŠ‚ç‚¹
 	if (node_list.size() <= 1) {
 		const_cast<XmlHandler*>(this)->MakeLastError("cannot get root node value");
 		return nullptr;
@@ -84,7 +84,7 @@ const char * XmlHandler::GetValueStr(const char *xml_path) const
 		path_node = node_tmp;
 	}
 
-	// Ã»ÓĞÒ»¸öÖµ, µ×²ã·µ»Ø¿Õ×Ö·û´®, µ«´Ë´¦ÈÏÎª»ñÈ¡Ê§°Ü
+	// æ²¡æœ‰ä¸€ä¸ªå€¼, åº•å±‚è¿”å›ç©ºå­—ç¬¦ä¸², ä½†æ­¤å¤„è®¤ä¸ºè·å–å¤±è´¥
 	if (strlen(path_node->value()) == 0)
 		return nullptr;
 
@@ -111,7 +111,7 @@ bool XmlHandler::SetValueStr(const char* xml_path, const char *value)
 
 	auto path_node = doc_.first_node();
 	if (!path_node) {
-		// ´´½¨¸ù½Úµã
+		// åˆ›å»ºæ ¹èŠ‚ç‚¹
 		char *node_name = doc_.allocate_string(node_list[0].c_str());
 		path_node = doc_.allocate_node(rapidxml::node_element, node_name, "");
 		doc_.append_node(path_node);
@@ -125,7 +125,7 @@ bool XmlHandler::SetValueStr(const char* xml_path, const char *value)
 	for (size_t i = 1; i < node_list.size(); ++i) {
 		auto node_tmp = path_node->first_node(node_list[i].c_str());
 		if (node_tmp && i == node_list.size()-1) {
-			path_node->remove_node(node_tmp);	// note: µ×²ãËÆºõÃ»ÓĞÖ±½ÓĞŞ¸ÄµÄ½Ó¿Ú, Òò´ËÕâÀïÏÈÉ¾³ı, ºóÌí¼Ó
+			path_node->remove_node(node_tmp);	// note: åº•å±‚ä¼¼ä¹æ²¡æœ‰ç›´æ¥ä¿®æ”¹çš„æ¥å£, å› æ­¤è¿™é‡Œå…ˆåˆ é™¤, åæ·»åŠ 
 			node_tmp = nullptr;
 		}
 
