@@ -9,14 +9,14 @@
 #include "common/NoCopy.h"
 #include "common/string_functions.h"
 
-// ·â×°RapidXml£¬¼ò»¯ÅäÖÃµÄ²Ù×÷
-// Í¨¹ıÒ»ÖÖÂ·¾¶±íÊ¾xml½Úµã, ±ÈÈç "config/name" ¿ÉÒÔ±íÊ¾:
+// å°è£…RapidXmlï¼Œç®€åŒ–é…ç½®çš„æ“ä½œ
+// é€šè¿‡ä¸€ç§è·¯å¾„è¡¨ç¤ºxmlèŠ‚ç‚¹, æ¯”å¦‚ "config/name" å¯ä»¥è¡¨ç¤º:
 // <config>
 // 		<name>Liudiwen</name>
 // </config>
 
-// È±µã:
-// - Áé»îĞÔ²»×ã, ÊÊÓÃÓÚÒ»´ÎĞÔÅäÖÃ¶ÁÈ¡/ÉèÖÃ²Ù×÷
+// ç¼ºç‚¹:
+// - çµæ´»æ€§ä¸è¶³, é€‚ç”¨äºä¸€æ¬¡æ€§é…ç½®è¯»å–/è®¾ç½®æ“ä½œ
 
 class XmlHandler
 {
@@ -30,25 +30,25 @@ public:
 		return lasterror_.c_str();
 	}
 
-	// ¸ù¾İxmlµÄÂ·¾¶»ñÈ¡Öµ
+	// æ ¹æ®xmlçš„è·¯å¾„è·å–å€¼
 	const char *GetValueStr(const char *xml_path) const;
 	
 	template<typename T>
 	bool GetValue(const char *xml_path, T &v) const;
 
-	// ¸ù¾İxmlµÄÂ·¾¶ÉèÖÃÖµ
+	// æ ¹æ®xmlçš„è·¯å¾„è®¾ç½®å€¼
 	bool SetValueStr(const char *xml_path, const char *value);
 
 	template<typename T>
 	bool SetValue(const char *xml_path, const T &v);
 
-	// ¸ù¾İxmlµÄÂ·¾¶Í¬²½Öµ, Èç¹ûÂ·¾¶²»´æÔÚ, ÄÇÃ´Ê¹ÓÃ init_value ³õÊ¼»¯
+	// æ ¹æ®xmlçš„è·¯å¾„åŒæ­¥å€¼, å¦‚æœè·¯å¾„ä¸å­˜åœ¨, é‚£ä¹ˆä½¿ç”¨ init_value åˆå§‹åŒ–
 	bool SyncValueStr(const char *xml_path, std::string &value, const char *init_value);
 
 	template<typename T>
 	bool SyncValue(const char *xml_path, T &value, const T &init_v);
 
-	// ±£´æÎÄ¼ş
+	// ä¿å­˜æ–‡ä»¶
 	bool Save(const char *save_file = nullptr);
 
 private:

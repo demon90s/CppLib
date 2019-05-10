@@ -8,7 +8,7 @@
 // 记录使用内存池申请内存的情况
 // 采取单例模式
 
-#define MEMORY_LOG_INTERVAL_S /*1*/60          // 硬编码志记间隔
+#define MEMORY_LOG_INTERVAL_S 1          // 硬编码志记间隔
 
 class MemoryPool;
 
