@@ -1,4 +1,5 @@
 #include "Thread.h"
+#include "common/other_templates.h"
 
 struct ThreadParam {
     Thread::ThreadFunc f;
@@ -8,10 +9,10 @@ struct ThreadParam {
 static void* DoThreadFunc(void *param)
 {
     ThreadParam *p = (ThreadParam*)param;
+    AutoDeletor<ThreadParam> ad(p);
 
     void *ret = p->f(p->param);
 
-    delete p;
     pthread_exit(ret);
 }
 
