@@ -9,11 +9,7 @@
 #include "socket/EpollJobConnect.h"
 
 #include <iostream>
-#include <cstdio>
-#include <cerrno>
-#include <cstring>
 #include <sys/socket.h>
-#include <sys/types.h>
 
 NetworkModule::NetworkModule(unsigned short listen_port) : listen_port_(listen_port), is_exist_(false), callback_(nullptr), 
 	job_queue_(256), connect_asyn_queue_(4)
