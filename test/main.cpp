@@ -12,6 +12,7 @@
 #include "test_MySqlHandler.h"
 #include "test_Memory.h"
 #include "test_Heap.h"
+#include "test_other_functions.h"
 
 int main(int argc, char *argv[])
 {
@@ -23,12 +24,13 @@ int main(int argc, char *argv[])
     //test_ThreadQueue();
     //test_Epoll(argc, argv);
     //test_ModuleManager();
-    test_Network(argc, argv);
+	//test_Network(argc, argv);
     //test_Logger();
     //test_MsgQueue(argc, argv);
     //test_MySqlHandler();
     //test_Memory();
     //test_Heap();
+	test_GetRandIndex();
 
     return 0;
 }
