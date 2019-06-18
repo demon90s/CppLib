@@ -1,4 +1,4 @@
-# easy
+# CppLib
 
 Do some work easy by cpp
 
